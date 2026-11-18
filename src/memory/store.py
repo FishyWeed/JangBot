@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DEFAULT_SESSIONS_DB = BASE_DIR / "logs" / "sessions.db"
+DEFAULT_SESSIONS_DB = BASE_DIR / "data" / "sessions.db"
 
 
 def _utc_now() -> str:
