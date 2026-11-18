@@ -30,17 +30,23 @@
     <header class="jb-hero">
       <div class="jb-hero__scene"><Scene name="hanokNight" /></div>
       <div class="jb-hero__veil"></div>
-      <div class="jb-hero__rain"><RainLayer /></div>
       <div class="jb-hero__copy">
-        <span class="jb-hero__eyebrow"><b lang="ko">장구</b>Janggu expert system</span>
-        <h1>Listen to the rain. Learn the janggu.<span class="ko" lang="ko">빗소리 따라, 장구 이야기</span></h1>
-        <p class="jb-hero__lead">Danbi is a small drum with a quiet voice. Ask him about the janggu’s history, its parts and its rhythms. Every answer comes with a verified source.</p>
-        <div class="jb-hero__ctas">
-          <button type="button" class="jb-btn jb-btn--primary jb-btn--lg" onclick={onstart}><Icon name="messageCircle" size={18} />Start chatting with Danbi</button>
-          <a class="jb-btn jb-btn--outline" href="#danbi">Meet Danbi</a>
+        <div class="jb-hero__rain"><RainLayer /></div>
+        <div class="jb-hero__copy-inner">
+          <span class="jb-hero__eyebrow"><b lang="ko">장구</b>Janggu expert system</span>
+          <h1>Listen to the rain. Learn the janggu.<span class="ko" lang="ko">빗소리 따라, 장구 이야기</span></h1>
+          <p class="jb-hero__lead">Danbi is a small drum with a quiet voice. Ask him about the janggu’s history, its parts and its rhythms. Every answer comes with a verified source.</p>
+          <div class="jb-hero__ctas">
+            <button type="button" class="jb-btn jb-btn--primary jb-btn--lg" onclick={onstart}><Icon name="messageCircle" size={18} />Start chatting with Danbi</button>
+            <a class="jb-btn jb-btn--outline" href="#danbi">Meet Danbi</a>
+          </div>
         </div>
       </div>
-      <div class="jb-hero__danbi"><Danbi pose="lantern" /></div>
+      <div class="jb-hero__divider" aria-hidden="true"><Scene name="giwaBand" class="jb-giwa" /></div>
+      <div class="jb-hero__stage">
+        <div class="jb-hero__mobile-scene"><Scene name="hanokNight" /></div>
+        <div class="jb-hero__danbi"><Danbi pose="lantern" /></div>
+      </div>
     </header>
   </div>
   <Scene name="giwaBand" class="jb-giwa" />
