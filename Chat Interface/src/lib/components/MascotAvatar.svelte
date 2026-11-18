@@ -1,15 +1,13 @@
 <script lang="ts">
-	import { Mascot } from '#lib/jangbot/index.js';
-	import type { MascotState } from '#lib/jangbot/types.d.ts';
+	import Mascot from '../jangbot/Mascot.svelte';
 
 	interface Props {
-		state?: MascotState;
+		state?: 'idle' | 'thinking' | 'speaking';
 		size?: number;
 		framed?: boolean;
-		label?: string;
 	}
 
-	let { state = 'idle', size = 44, framed = true, label }: Props = $props();
+	let { state = 'idle', size = 44, framed = true }: Props = $props();
 </script>
 
-<Mascot {state} {size} {framed} {label} />
+<Mascot {state} {size} {framed} />

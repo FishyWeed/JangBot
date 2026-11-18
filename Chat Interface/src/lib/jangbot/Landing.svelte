@@ -3,10 +3,11 @@
   import Logo from './Logo.svelte';
   import Icon from './Icon.svelte';
   import Scene from './Scene.svelte';
+  import RainLayer from './RainLayer.svelte';
   import Danbi from './Danbi.svelte';
 
   /**
-   * Landing page: a rainy night at the hanok. Pass `mascotSrc` (1:1, at least 840px) to replace the placeholder slot.
+   * Landing page: a rainy night at the hanok. Optionally pass `mascotSrc` to display a custom raster/SVG asset.
    * @type {{ onstart?: () => void, mascotSrc?: string, mascotAlt?: string }}
    */
   let { onstart, mascotSrc, mascotAlt = 'Danbi, the janggu mascot' } = $props();
@@ -29,6 +30,7 @@
     <header class="jb-hero">
       <div class="jb-hero__scene"><Scene name="hanokNight" /></div>
       <div class="jb-hero__veil"></div>
+      <div class="jb-hero__rain"><RainLayer /></div>
       <div class="jb-hero__copy">
         <span class="jb-hero__eyebrow"><b lang="ko">장구</b>Janggu expert system</span>
         <h1>Listen to the rain. Learn the janggu.<span class="ko" lang="ko">빗소리 따라, 장구 이야기</span></h1>
@@ -54,9 +56,7 @@
         {#if mascotSrc}
           <img class="jb-slot__img" src={mascotSrc} alt={mascotAlt} />
         {:else}
-          <span class="jb-slot__tag">MASCOT · PLACEHOLDER</span>
           <div class="jb-slot__fig"><Danbi pose="drumming" /></div>
-          <span class="jb-slot__note">Final Danbi illustration goes here (1:1, transparent PNG or SVG, at least 840px)</span>
         {/if}
       </div>
       <div class="jb-namecard">
