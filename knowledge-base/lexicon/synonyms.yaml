@@ -1,0 +1,295 @@
+# Lexicon and synonym mapping for Janggu expert system
+
+synonyms:
+  janggu:
+    - "janggu"
+    - "janggo"
+    - "changgo"
+    - "chang-go"
+    - "hourglass drum"
+    - "장구"
+    - "장고"
+
+  gungpyeon:
+    - "gungpyeon"
+    - "bukpyeon"
+    - "left head"
+    - "left side"
+    - "thick head"
+    - "bass head"
+    - "bass side"
+    - "cowhide side"
+    - "북편"
+    - "궁편"
+
+  chaepyeon:
+    - "chaepyeon"
+    - "right head"
+    - "right side"
+    - "thin head"
+    - "treble head"
+    - "treble side"
+    - "horsehide side"
+    - "채편"
+
+  yeolchae:
+    - "yeolchae"
+    - "bamboo stick"
+    - "thin stick"
+    - "whip stick"
+    - "right stick"
+    - "열채"
+
+  gungchae:
+    - "gungchae"
+    - "mallet"
+    - "round stick"
+    - "left stick"
+    - "bass stick"
+    - "궁채"
+
+  jorongmok:
+    - "jorongmok"
+    - "narrow waist"
+    - "middle tube"
+    - "central tube"
+    - "acoustic choke"
+    - "waist"
+    - "조롱목"
+
+  ullimtong:
+    - "ullimtong"
+    - "wooden body"
+    - "resonator body"
+    - "paulownia body"
+    - "drum shell"
+    - "울림통"
+
+  joimjul:
+    - "joimjul"
+    - "side rope"
+    - "cords"
+    - "tuning cords"
+    - "v-shaped cords"
+    - "lacing"
+    - "부편"
+    - "조임줄"
+
+  joigae:
+    - "joigae"
+    - "tuning wedges"
+    - "leather wedges"
+    - "sleeves"
+    - "sliding wedges"
+    - "조이개"
+
+  strokes:
+    - "strokes"
+    - "deong"
+    - "gung"
+    - "tta"
+    - "gideok"
+    - "gi-deok"
+    - "kkol"
+    - "jjak"
+    - "rimshot"
+    - "flam"
+
+  jangdan:
+    - "jangdan"
+    - "rhythmic cycles"
+    - "rhythm patterns"
+    - "jinyangjo"
+    - "jungmori"
+    - "jungjungmori"
+    - "jajinmori"
+    - "hwimori"
+    - "gutgeori"
+    - "eonmori"
+    - "장단"
+
+  chuimsae:
+    - "chuimsae"
+    - "vocal cries"
+    - "cries of encouragement"
+    - "eolssigu"
+    - "jota"
+    - "추임새"
+
+  jeongganbo:
+    - "jeongganbo"
+    - "grid notation"
+    - "score notation"
+    - "정간보"
+
+  akhak_gwebeom:
+    - "akhak gwebeom"
+    - "akhak gwebeom 1493"
+    - "manual of musicology"
+    - "seong hyeon"
+    - "악학궤범"
+
+  goryeosa:
+    - "goryeosa"
+    - "history of goryeo"
+    - "janggu-opsa"
+    - "고려사"
+
+  yogo:
+    - "yogo"
+    - "waist drum"
+    - "idakka"
+    - "edakka"
+    - "요고"
+
+  seyogo:
+    - "seyogo"
+    - "slim waist drum"
+    - "세화고"
+    - "세요고"
+
+  daechwita:
+    - "daechwita"
+    - "yonggo"
+    - "military band"
+    - "war drum"
+    - "대취타"
+    - "용고"
+
+  bokpan:
+    - "bokpan"
+    - "byeonjuk"
+    - "strike zone"
+    - "strike zones"
+    - "center of the head"
+
+  seoljanggu:
+    - "seoljanggu"
+    - "gaeinjanggunori"
+    - "kim byeong-seop"
+    - "sangmo"
+    - "설장구"
+
+  ijanggu:
+    - "ijanggu"
+    - "umulsai"
+    - "piezo"
+    - "omr"
+    - "optical music recognition"
+
+  nongak_pungmul:
+    - "pungmul"
+    - "nongak"
+    - "minjung"
+    - "풍물"
+    - "농악"
+
+  archaeology:
+    - "anak"
+    - "deokheung-ri"
+    - "susan-ri"
+    - "palcheong-ri"
+    - "geumdong daehyangno"
+    - "incense burner"
+    - "sangwonsa"
+    - "seongdeok bell"
+    - "eumseongseo"
+    - "goguryeo"
+    - "baekje"
+
+  sajanggu:
+    - "sajanggu"
+    - "celadon janggu"
+    - "ceramic janggu"
+    - "ceramic body"
+
+  hornbostel:
+    - "hornbostel-sachs"
+    - "hornbostel"
+    - "211.242"
+
+  pansori:
+    - "pansori"
+    - "jeokbyeokga"
+    - "판소리"
+
+  synthetic:
+    - "frp"
+    - "fiberglass"
+    - "mylar"
+    - "synthetic"
+    - "plastic"
+
+  wood_anatomy:
+    - "density"
+    - "kg/m3"
+    - "shrinkage"
+    - "earlywood"
+    - "latewood"
+    - "tyloses"
+    - "tension wood"
+    - "g-fibers"
+    - "g-fiber"
+    - "crystallinity"
+    - "dendrochronology"
+
+  surface_finish:
+    - "nakdong"
+    - "ottchil"
+    - "urushi"
+    - "isinglass"
+    - "hide glue"
+    - "fish glue"
+    - "q-factor"
+    - "tap-tuning"
+    - "wolf tones"
+    - "wolf tone"
+
+  acoustics_physics:
+    - "sldv"
+    - "vibrometry"
+    - "laser doppler"
+    - "helmholtz"
+    - "transfer matrix"
+    - "tmm"
+    - "inertance"
+    - "adsr"
+    - "omnidirectional"
+    - "phase cancellation"
+
+  ml_dsp:
+    - "melcnn"
+    - "mert"
+    - "mert-v1"
+    - "f0cnn"
+    - "rmvpe"
+    - "fdtd"
+    - "dwm"
+    - "digital waveguide"
+    - "faust"
+    - "cfl"
+    - "bela"
+    - "pure data"
+    - "accelerometer"
+
+  conservation:
+    - "sr-uct"
+    - "microtomography"
+    - "ct scan"
+    - "p-xrf"
+    - "xrf"
+    - "polyethylene glycol"
+    - "photogrammetry"
+    - "duksu 1726"
+    - "duksu"
+    - "bisaek"
+    - "gangjin"
+
+  microtonal_tuning:
+    - "440hz"
+    - "equal temperament"
+    - "ajaeng"
+    - "piri"
+    - "microtonal"
+    - "class 3 lever"
+    - "fulcrum"

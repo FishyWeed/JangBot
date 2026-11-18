@@ -1,0 +1,382 @@
+# 115-question adversarial, niche, multi-turn, gap and guardrail benchmark suite for JangBot (Danbi)
+
+categories:
+  archaeology_and_origins:
+    - query: "Which Goguryeo tombs depict waist drums alongside the five-stringed pipa?"
+      expected_status: "answered"
+      must_contain_any: ["anak", "deokheung-ri", "susan-ri", "palcheong-ri"]
+    - query: "Tell me about the drum carved on the Baekje Great Gilt-Bronze Incense Burner."
+      expected_status: "answered"
+      must_contain_any: ["geumdong daehyangno", "buyeo", "baekje"]
+    - query: "What do the Sangwonsa and King Seongdeok temple bells show?"
+      expected_status: "answered"
+      must_contain_any: ["seyogo", "771", "silla"]
+    - query: "What was the Eumseongseo established in 651 CE?"
+      expected_status: "answered"
+      must_contain_any: ["651", "eumseongseo", "samguk sagi", "silla"]
+    - query: "How did the Indian idakka migrate into Silla as the yogo?"
+      expected_status: "answered"
+      must_contain_any: ["idakka", "silk road", "yogo"]
+    - query: "Explain the 1076 janggu-opsa title in the Goryeosa."
+      expected_status: "answered"
+      must_contain_any: ["1076", "janggu-opsa", "goryeosa", "munjong"]
+    - query: "Why did King Yejong import Song Dynasty instruments in 1114?"
+      expected_status: "answered"
+      must_contain_any: ["1114", "yejong", "song"]
+    - query: "Tell me about celadon sajanggu drums from the Goryeo dynasty."
+      expected_status: "answered"
+      must_contain_any: ["sajanggu", "celadon", "national museum"]
+    - query: "Are there ancient murals at Deokheung-ri or Anak No. 3 showing waist drums?"
+      expected_status: "answered"
+      must_contain_any: ["408", "deokheung-ri", "anak", "goguryeo"]
+    - query: "Why didn't ceramic sajanggu drums replace wood for mobile folk bands?"
+      expected_status: "answered"
+      must_contain_any: ["fragile", "heavy", "sajanggu", "celadon", "chamber"]
+
+  etymology_and_nomenclature:
+    - query: "What does the Sino-Korean word janggo mean?"
+      expected_status: "answered"
+      must_contain_any: ["stick", "drum", "杖", "鼓"]
+    - query: "Why was the drum historically called seyogo?"
+      expected_status: "answered"
+      must_contain_any: ["slim waist", "細腰鼓", "seyogo"]
+    - query: "Explain the nongak vs pungmul controversy."
+      expected_status: "answered"
+      must_contain_any: ["nongak", "pungmul", "disagree", "minjung"]
+    - query: "Why did 1980s minjung activists criticize the term nongak?"
+      expected_status: "answered"
+      must_contain_any: ["pungmul", "colonial", "shamanic", "minjung"]
+    - query: "When did scholar An Yu-sin record the term nongak?"
+      expected_status: "answered"
+      must_contain_any: ["1657", "an yu-sin", "nongak"]
+    - query: "What is the etymology of janggu and janggo?"
+      expected_status: "answered"
+      must_contain_any: ["janggo", "seyogo", "stick"]
+    - query: "How does the Akhak Gwebeom distinguish the janggu from the galgo?"
+      expected_status: "answered"
+      must_contain_any: ["1493", "galgo", "asymmetric", "seong hyeon"]
+    - query: "Did the galgo have symmetrical or asymmetrical heads?"
+      expected_status: "answered"
+      must_contain_any: ["galgo", "1493", "symmetrical", "asymmetric"]
+    - query: "What did King Sejong invent in 1447 for notating janggu strokes?"
+      expected_status: "answered"
+      must_contain_any: ["jeongganbo", "sejong", "grid", "1447"]
+    - query: "When was the National Gugak Center founded in Seoul?"
+      expected_status: "answered"
+      must_contain_any: ["1951", "jangagwon", "national gugak center"]
+
+  military_and_societal_roles:
+    - query: "Was the janggu ever used in war or combat signaling?"
+      expected_status: "answered"
+      must_contain_any: ["excluded", "daechwita", "yonggo"]
+    - query: "Why was the janggu excluded from battlefield Daechwita marches?"
+      expected_status: "answered"
+      must_contain_any: ["yonggo", "daechwita", "obscuring", "dual", "high and low"]
+    - query: "What drum did Korean armies use instead of the janggu in Daechwita?"
+      expected_status: "answered"
+      must_contain_any: ["yonggo", "barrel drum", "daechwita"]
+    - query: "Do modern South Korean ROKA army bands play the janggu?"
+      expected_status: "answered"
+      must_contain_any: ["roka", "army", "ceremonial", "concert"]
+    - query: "How are battles portrayed musically using janggu rhythms in Pansori?"
+      expected_status: "answered"
+      must_contain_any: ["jajinmori", "jeokbyeokga", "battles"]
+    - query: "Which jangdan scores naval warfare scenes in Jeokbyeokga?"
+      expected_status: "answered"
+      must_contain_any: ["jajinmori", "jeokbyeokga"]
+    - query: "Who was Kim Byeong-seop and what did he change about seoljanggu?"
+      expected_status: "answered"
+      must_contain_any: ["kim byeong-seop", "gaeinjanggunori", "honam udo", "seoljanggu"]
+    - query: "What is sangmo and what does the seoljanggu do in pungmul?"
+      expected_status: "answered"
+      must_contain_any: ["sangmo", "seoljanggu", "lead drummer"]
+    - query: "How did the 1978 shift to Samulnori affect female drummers?"
+      expected_status: "answered"
+      must_contain_any: ["female", "samulnori", "1978", "kinetic", "namsadang"]
+    - query: "Was the janggu used in shamanistic gut rituals and Musok?"
+      expected_status: "answered"
+      must_contain_any: ["shaman", "gutgeori", "ritual"]
+    - query: "How did Choi Seung-hee adapt janggu drumming in the 1930s?"
+      expected_status: "answered"
+      must_contain_any: ["choi seung-hee", "stage", "choreography", "1930s"]
+
+  acoustics_and_digital:
+    - query: "Why are the overtones of a janggu inharmonic instead of harmonic?"
+      expected_status: "answered"
+      must_contain_any: ["bessel", "inharmonic"]
+    - query: "How do Bessel functions apply to janggu drumheads?"
+      expected_status: "answered"
+      must_contain_any: ["bessel", "inharmonic", "membrane"]
+    - query: "Why does the thick cowhide side produce a lower pitch than horsehide?"
+      expected_status: "answered"
+      must_contain_any: ["cowhide", "bass", "horsehide", "treble", "density"]
+    - query: "Why does striking the byeonjuk rim sound sharper than the bokpan center?"
+      expected_status: "answered"
+      must_contain_any: ["byeonjuk", "bokpan", "fundamental", "tack"]
+    - query: "What is the acoustic purpose of the jorongmok narrow waist?"
+      expected_status: "answered"
+      must_contain_any: ["jorongmok", "choke", "damping", "resonance"]
+    - query: "What Hornbostel-Sachs number classifies the janggu?"
+      expected_status: "answered"
+      must_contain_any: ["211.242", "membranophone"]
+    - query: "How does KAIST's Umulsai system digitize Jeongganbo scores?"
+      expected_status: "answered"
+      must_contain_any: ["umulsai", "kaist", "omr", "ebnf"]
+    - query: "What are EBNF grammars used for in janggu musicology?"
+      expected_status: "answered"
+      must_contain_any: ["ebnf", "umulsai", "jeongganbo", "omr"]
+    - query: "What is the iJanggu and how do piezo sensors work on it?"
+      expected_status: "answered"
+      must_contain_any: ["ijanggu", "piezo", "physical modeling"]
+    - query: "Why do electronic drum pads fail compared to the iJanggu?"
+      expected_status: "answered"
+      must_contain_any: ["ijanggu", "piezo", "tactile", "physical modeling"]
+
+  construction_and_synthetics:
+    - query: "Why do artisans harvest 30-year-old Paulownia trees from rocky soil?"
+      expected_status: "answered"
+      must_contain_any: ["paulownia", "rocky", "30", "aged", "cured"]
+    - query: "Why is the interior of the ullimtong scorched with fire?"
+      expected_status: "answered"
+      must_contain_any: ["scorch", "fire", "moisture", "pores"]
+    - query: "What is the diameter of the left head vs the right head?"
+      expected_status: "answered"
+      must_contain_any: ["36", "46", "35", "45"]
+    - query: "How do sliding joigae wedges tighten the joimjul cords?"
+      expected_status: "answered"
+      must_contain_any: ["joigae", "joimjul", "right", "left", "tension"]
+    - query: "If I tighten the right side, does the left side pitch change too?"
+      expected_status: "answered"
+      must_contain_any: ["lacing", "both heads", "shift", "joigae", "joimjul"]
+    - query: "Are modern fiberglass FRP and Mylar janggu resistant to humidity?"
+      expected_status: "answered"
+      must_contain_any: ["frp", "mylar", "humidity", "synthetic"]
+    - query: "Why do traditional purists prefer wooden drums over synthetic FRP ones?"
+      expected_status: "answered"
+      must_contain_any: ["frp", "warmth", "inharmonic", "wood", "paulownia"]
+    - query: "How long is a standard janggu drum?"
+      expected_status: "answered"
+      must_contain_any: ["66 cm", "hourglass"]
+    - query: "What preserved Korean changgo drum is at The Metropolitan Museum of Art?"
+      expected_status: "answered"
+      must_contain_any: ["19th-century", "1800s", "metropolitan"]
+
+  computational_organology_and_conservation:
+    - query: "What is the oven-dry density and T/R shrinkage ratio of Paulownia coreana?"
+      expected_status: "answered"
+      must_contain_any: ["260", "340", "1.4"]
+    - query: "What role do tyloses and tension wood G-fibers play in Paulownia drums?"
+      expected_status: "answered"
+      must_contain_any: ["tyloses", "g-fibers", "65.1%"]
+    - query: "Why do artisans use nakdong scorching, ottchil lacquer and sturgeon isinglass glue?"
+      expected_status: "answered"
+      must_contain_any: ["nakdong", "ottchil", "isinglass", "q-factor"]
+    - query: "How do makers tap-tuning graduated walls avoid wolf tones?"
+      expected_status: "answered"
+      must_contain_any: ["tap-tuning", "wolf tones", "graduated"]
+    - query: "How do 3D SLDV vibrometry and Transfer Matrix Modeling analyze the janggu?"
+      expected_status: "answered"
+      must_contain_any: ["sldv", "helmholtz", "tmm", "inertance"]
+    - query: "How do the gungchae Class 3 lever and yeolchae finger fulcrum differ biomechanically?"
+      expected_status: "answered"
+      must_contain_any: ["class 3 lever", "fulcrum", "omnidirectional"]
+    - query: "How do MelCNN and MERT-v1 classify janggu strokes compared to F0CNN?"
+      expected_status: "answered"
+      must_contain_any: ["melcnn", "mert-v1", "accelerometer"]
+    - query: "How do FDTD digital waveguide meshes, FAUST and Bela boards run the iJanggu?"
+      expected_status: "answered"
+      must_contain_any: ["fdtd", "faust", "bela", "pure data"]
+    - query: "How do SR-μCT microtomography and p-XRF inspect historic drums without dismantling them?"
+      expected_status: "answered"
+      must_contain_any: ["sr-μct", "p-xrf", "dendrochronology"]
+    - query: "What museum climate equilibrium and 3D photogrammetry protect Duksu 1726 celadon sajanggu?"
+      expected_status: "answered"
+      must_contain_any: ["20°c", "50", "duksu 1726", "gangjin"]
+    - query: "Why isn't the janggu tuned to A=440Hz equal temperament, and how is Jeongganbo read?"
+      expected_status: "answered"
+      must_contain_any: ["440hz", "ajaeng", "piri", "top-to-bottom"]
+
+  technique_and_rhythms:
+    - query: "Contrast the bokpan and byeonjuk strike zones in court vs folk music."
+      expected_status: "answered"
+      must_contain_any: ["bokpan", "byeonjuk", "jeongak"]
+    - query: "How does court jeongak left-hand playing differ from pungmul?"
+      expected_status: "answered"
+      must_contain_any: ["bare", "palm", "gungchae", "circular"]
+    - query: "What is the difference between yeolchae and gungchae?"
+      expected_status: "answered"
+      must_contain_any: ["yeolchae", "gungchae", "bamboo"]
+    - query: "What are the five strokes deong, gung, tta, gi-deok and jjak?"
+      expected_status: "answered"
+      must_contain_any: ["deong", "gung", "tta", "gi-deok", "jjak"]
+    - query: "What is eotmori or eonmori and why does 3+2+3+2 feel unusual?"
+      expected_status: "answered"
+      must_contain_any: ["eonmori", "3+2+3+2", "10-beat"]
+    - query: "Compare Jinyangjo and Hwimori tempos and moods."
+      expected_status: "answered"
+      must_contain_any: ["jinyangjo", "hwimori", "24-beat", "4-beat"]
+    - query: "Which jangdan feels like a moderate walking pace?"
+      expected_status: "answered"
+      must_contain_any: ["jungmori", "walking"]
+    - query: "What is Gutgeori mostly used for in Korean music?"
+      expected_status: "answered"
+      must_contain_any: ["gutgeori", "12-beat", "swing", "sanjo"]
+    - query: "How do performers use chuimsae vocal shouts like Eolssigu and Jota?"
+      expected_status: "answered"
+      must_contain_any: ["chuimsae", "eolssigu", "jota"]
+    - query: "Is it hard for beginners to coordinate both hands on the janggu?"
+      expected_status: "answered"
+      must_contain_any: ["practice", "jungmori", "yeolchae", "gungchae"]
+
+  human_language_shorthand_typos:
+    - query: "wat mats r used for the lh side"
+      expected_status: "answered"
+      must_contain_any: ["cowhide", "gungpyeon"]
+    - query: "hw do u play jangu in court vs folk"
+      expected_status: "answered"
+      must_contain_any: ["jeongak", "yeolchae", "gungchae"]
+    - query: "y is da middle waist so narrow"
+      expected_status: "answered"
+      must_contain_any: ["jorongmok", "choke"]
+    - query: "tell me bout daecwhita war drum"
+      expected_status: "answered"
+      must_contain_any: ["yonggo", "daechwita"]
+    - query: "wats da diff btw nongak and pungmul"
+      expected_status: "answered"
+      must_contain_any: ["nongak", "pungmul"]
+    - query: "expln bessel overtones plz"
+      expected_status: "answered"
+      must_contain_any: ["bessel", "inharmonic"]
+    - query: "who invented jeongganbo notaton"
+      expected_status: "answered"
+      must_contain_any: ["sejong", "jeongganbo"]
+    - query: "do ppl use synthetic plastic janggu nowadays"
+      expected_status: "answered"
+      must_contain_any: ["frp", "mylar", "synthetic"]
+    - query: "wht is seoljanggu"
+      expected_status: "answered"
+      must_contain_any: ["seoljanggu", "pungmul"]
+    - query: "is ijanggu real"
+      expected_status: "answered"
+      must_contain_any: ["ijanggu", "piezo"]
+
+  unverified_domain_gaps:
+    - query: "How much does a standard wooden janggu weigh in kilograms?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "What is the average retail price of a master-made wooden janggu in USD?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "Did Admiral Yi Sun-sin keep janggu drums on Geobukseon turtle ships?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "Was a janggu drum ever taken to the International Space Station by astronauts?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "How did North Korea redesign the janggu in Pyongyang factories in the 1960s?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "Were mirrored left-handed janggu drums mandated at Joseon court banquets?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "What exact relative humidity percentage cracks a Paulownia ullimtong?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "Which Insadong musical instrument shop sells the cheapest synthetic janggu?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "Were janggu drums ever used as tax currency in Goryeo markets?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+    - query: "What is the exact decibel SPL output of a fiberglass janggu at 1 meter?"
+      expected_status: "fallback"
+      must_contain_any: ["don't have verified information"]
+
+  strict_off_topic_guardrails:
+    - query: "What is the capital of France?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "Who won the 2022 FIFA World Cup?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "What is the weather in Seoul today?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "How do I cook kimchi fried rice?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "Write a Python quicksort algorithm."
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "Tell me about Beethoven's Fifth Symphony."
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "How does photosynthesis work in green plants?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "What is the stock price of Samsung Electronics?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "Explain black hole event horizons."
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "How do I play the Japanese taiko drum?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "How do I tune a Spanish acoustic guitar?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+    - query: "How do you play the African djembe?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]
+
+conversations:
+  chain_war_follow_up:
+    - query: "Was the janggu used in war?"
+      expected_status: "answered"
+      must_contain_any: ["daechwita", "yonggo", "excluded"]
+    - query: "How about in Pansori battle stories?"
+      expected_status: "answered"
+      must_contain_any: ["jajinmori", "jeokbyeokga", "battles"]
+    - query: "How do you know that?"
+      expected_status: "answered"
+      must_contain_any: ["verified", "gugak"]
+
+  chain_origin_followup:
+    - query: "who created it"
+      expected_status: "answered"
+      must_contain_any: ["idakka", "silla"]
+    - query: "yes"
+      expected_status: "answered"
+      must_contain_any: ["jeongak", "nongak"]
+    - query: "tell me about the playing technique"
+      expected_status: "answered"
+      must_contain_any: ["jwa-sik", "ip-sik"]
+    - query: "yes"
+      expected_status: "answered"
+      must_contain_any: ["yeolchae", "gungchae"]
+    - query: "How do you know that?"
+      expected_status: "answered"
+      must_contain_any: ["verified"]
+
+  chain_pronoun_construction:
+    - query: "Tell me about bukpyeon"
+      expected_status: "answered"
+      must_contain_any: ["cowhide", "gungpyeon"]
+    - query: "and the other side?"
+      expected_status: "answered"
+      must_contain_any: ["chaepyeon", "horsehide"]
+    - query: "How are they tuned?"
+      expected_status: "answered"
+      must_contain_any: ["joimjul", "joigae"]
+
+  chain_rhythm_memory:
+    - query: "I am a beginner and my wrist feels tense when practicing Gutgeori."
+      expected_status: "answered"
+      must_contain_any: ["gutgeori", "wrist tension"]
+    - query: "how do I play that faster?"
+      expected_status: "answered"
+      must_contain_any: ["gutgeori", "wrist tension"]
+    - query: "What is the weather in Berlin right now?"
+      expected_status: "off_topic"
+      must_contain_any: ["solely to the korean janggu"]

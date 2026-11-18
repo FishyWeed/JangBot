@@ -1,0 +1,15 @@
+.env
+.git
+.gitignore
+.venv
+venv
+__pycache__
+.pytest_cache
+data
+logs
+Chat Interface/node_modules
+Chat Interface/.svelte-kit
+Chat Interface/build
+Janggu Expert System Research.md
+Janggu Expert System Chatbot Project Compendium.md
+design system

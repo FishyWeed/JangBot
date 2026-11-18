@@ -1,0 +1,243 @@
+/* Danbi · JangBot — generated from tokens.json */
+:root, [data-theme="dark"] {
+  --bg-canvas: #11161F;
+  --bg-sidebar: #161C26;
+  --bg-chat: #141922;
+  --bg-elevated: #1D2430;
+  --bg-composer: #1D2430;
+  --bg-hover: #262E3C;
+  --bg-pressed: #2F3847;
+  --bg-selected: #2B2716;
+  --overlay-backdrop: rgba(7, 9, 13, 0.66);
+  --border-default: #2C3545;
+  --border-subtle: #232936;
+  --border-control: #747D8A;
+  --border-ink: #C9C2B2;
+  --border-focus: #9FB2CA;
+  --text-primary: #E8E2D4;
+  --text-secondary: #A1A8B3;
+  --text-placeholder: #8E95A1;
+  --text-inverse: #11161F;
+  --text-on-accent: #1F1A12;
+  --text-disabled: #5D6472;
+  --accent: #F0B44C;
+  --accent-hover: #F6C46C;
+  --accent-active: #DB9C34;
+  --accent-disabled: #3A3322;
+  --accent-soft: #2B2716;
+  --highlight: #D9654B;
+  --highlight-soft: #3A2024;
+  --highlight-text: #F29C84;
+  --brand-blue: #9FB2CA;
+  --brand-blue-soft: #252E3E;
+  --brand-blue-text: #C0CEE0;
+  --status-online: #5CC08A;
+  --status-connecting: #E3A645;
+  --error-bg: #351A22;
+  --error-border: #6E2E36;
+  --error-text: #F4AFAE;
+  --danger: #F07F78;
+  --danger-soft: #3A1C24;
+  --bubble-user: #E9DFC8;
+  --bubble-user-text: var(--text-on-accent);
+  --bubble-assistant: #1D2430;
+  --bubble-assistant-text: var(--text-primary);
+  --citation-bg: var(--brand-blue-soft);
+  --citation-text: var(--brand-blue-text);
+  --citation-border: #3A475D;
+  --mark-bg: rgba(240, 180, 76, 0.28);
+  --selection-bg: rgba(240, 180, 76, 0.34);
+  --caret: #F0B44C;
+  --scrollbar-thumb: #37404F;
+  --scrollbar-thumb-hover: #F0B44C;
+  --chip-bg: #1D2430;
+  --chip-bg-hover: var(--accent-soft);
+  --chip-bg-active: var(--accent);
+  --mascot-body: #E8473C;
+  --mascot-body-shade: #C42B21;
+  --mascot-head: #FFF7E6;
+  --mascot-hoop: #2F55D4;
+  --mascot-cord: #FFF7E6;
+  --mascot-waist: #F0B44C;
+  --mascot-ink: #1F1A17;
+  --mascot-blush: #FF9C8A;
+  --mascot-mouth: #8E2A1E;
+  --stick-bamboo: #D8B26E;
+  --stick-head: #8A5B3D;
+  --avatar-bg: #E9DFC8;
+  --avatar-bg-thinking: #F0B44C;
+  --avatar-border: var(--border-ink);
+  --art-sky: #121824;
+  --art-sky-low: #1F2836;
+  --art-moon: #D9D2C2;
+  --art-mountain-far: #1F2736;
+  --art-mountain-near: #181F2B;
+  --art-roof: #0B0E14;
+  --art-roof-hi: #354051;
+  --art-wood: #2A211E;
+  --art-pillar: #5A2A22;
+  --art-wall: #212736;
+  --art-paper: #F0B44C;
+  --art-glow: #F6C46C;
+  --art-stone: #2C3545;
+  --art-ground: #10151D;
+  --art-water: #1D2634;
+  --art-pine: #141D1E;
+  --art-line: #07090E;
+  --art-rain: rgba(183, 197, 217, 0.42);
+  --art-mist: rgba(163, 175, 197, 0.10);
+  --art-bokeh: rgba(240, 180, 76, 0.30);
+  --saekdong-green: #4E9A78;
+  --shadow-sticker: 0 2px 0 #03060C;
+  --shadow-sticker-lg: 0 4px 0 #03060C;
+  --shadow-composer: 0 3px 0 #03060C, 0 16px 36px rgba(0, 0, 0, 0.45);
+  --shadow-drawer: 0 14px 36px rgba(0, 0, 0, 0.55);
+  --shadow-slideover: 12px 0 40px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 24px rgba(240, 180, 76, 0.35);
+  --shadow-focus: 0 0 0 2px #171C24, 0 0 0 4px #A4B3C6;
+}
+[data-theme="light"] {
+  --bg-canvas: #E6E4DF;
+  --bg-sidebar: #EFEEEA;
+  --bg-chat: #EAE8E3;
+  --bg-elevated: #F6F5F1;
+  --bg-composer: #F6F5F1;
+  --bg-hover: #DEDCD6;
+  --bg-pressed: #D3D0C9;
+  --bg-selected: #EFE3C6;
+  --overlay-backdrop: rgba(31, 30, 28, 0.42);
+  --border-default: #D0CDC5;
+  --border-subtle: #DDDAD3;
+  --border-control: #7E7A72;
+  --border-ink: #262422;
+  --border-focus: #4F657F;
+  --text-primary: #1F1E1C;
+  --text-secondary: #5B5852;
+  --text-placeholder: #6B675F;
+  --text-inverse: #F6F5F1;
+  --text-on-accent: #1F1A12;
+  --text-disabled: #A29E96;
+  --accent: #E2A13A;
+  --accent-hover: #D39228;
+  --accent-active: #C2831C;
+  --accent-disabled: #E6DCC3;
+  --accent-soft: #EFE3C6;
+  --highlight: #D4835F;
+  --highlight-soft: #F1DED6;
+  --highlight-text: #9A4429;
+  --brand-blue: #4F657F;
+  --brand-blue-soft: #DFE3E9;
+  --brand-blue-text: #3D4F65;
+  --status-online: #2E8456;
+  --status-connecting: #9E6E1A;
+  --error-bg: #F6E3E1;
+  --error-border: #E2B3AD;
+  --error-text: #9E2F22;
+  --danger: #BE3A2B;
+  --danger-soft: #F4E0DD;
+  --bubble-user: #F3E7CB;
+  --bubble-user-text: var(--text-on-accent);
+  --bubble-assistant: #F6F5F1;
+  --bubble-assistant-text: var(--text-primary);
+  --citation-bg: var(--brand-blue-soft);
+  --citation-text: var(--brand-blue-text);
+  --citation-border: #C5CBD4;
+  --mark-bg: rgba(226, 161, 58, 0.42);
+  --selection-bg: rgba(226, 161, 58, 0.36);
+  --caret: #A86D12;
+  --scrollbar-thumb: #C3BFB7;
+  --scrollbar-thumb-hover: #A86D12;
+  --chip-bg: #F6F5F1;
+  --chip-bg-hover: var(--accent-soft);
+  --chip-bg-active: var(--accent);
+  --avatar-bg: #EFE3C6;
+  --avatar-bg-thinking: #E2A13A;
+  --avatar-border: var(--border-ink);
+  --art-sky: #DCDAD4;
+  --art-sky-low: #E8E6E1;
+  --art-moon: #F6F5F1;
+  --art-mountain-far: #C7C4BD;
+  --art-mountain-near: #B2AEA6;
+  --art-roof: #33312E;
+  --art-roof-hi: #6E6A63;
+  --art-wood: #6B5A4A;
+  --art-pillar: #8A4A3C;
+  --art-wall: #D8D2C6;
+  --art-paper: #F3E7CB;
+  --art-glow: #E2A13A;
+  --art-stone: #A9A49B;
+  --art-ground: #CFCBC3;
+  --art-water: #BDB9B2;
+  --art-pine: #5E6B60;
+  --art-line: #1F1E1C;
+  --art-rain: rgba(52, 53, 58, 0.30);
+  --art-mist: rgba(255, 255, 255, 0.45);
+  --art-bokeh: rgba(226, 161, 58, 0.22);
+  --saekdong-green: #4E8A6E;
+  --shadow-sticker: 0 2px 0 #262422;
+  --shadow-sticker-lg: 0 4px 0 #262422;
+  --shadow-composer: 0 3px 0 #262422, 0 12px 28px rgba(31, 30, 28, 0.10);
+  --shadow-drawer: 0 12px 32px rgba(31, 30, 28, 0.14);
+  --shadow-slideover: 12px 0 40px rgba(31, 30, 28, 0.22);
+  --shadow-card: 0 1px 2px rgba(31, 30, 28, 0.06);
+  --shadow-glow: 0 0 18px rgba(226, 161, 58, 0.30);
+  --shadow-focus: 0 0 0 2px #F6F5F1, 0 0 0 4px #3E6390;
+}
+:root {
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-20: 80px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-avatar: 12px;
+  --radius-lg: 20px;
+  --radius-tail: 6px;
+  --radius-pill: 999px;
+  --sidebar-width: 288px;
+  --header-height: 64px;
+  --brandbar-compact-width: 104px;
+  --message-max-width: 720px;
+  --bubble-max-width: 82%;
+  --composer-padding: 16px;
+  --scrollbar-size: 10px;
+  --drawer-width: 320px;
+  --breakpoint-mobile: 768px;
+  --breakpoint-desktop: 1024px;
+  --duration-fast: 180ms;
+  --duration-press: 120ms;
+  --duration-panel: 320ms;
+  --duration-idle: 5s;
+  --duration-rain: 1.4s;
+  --z-drawer: 20;
+  --z-backdrop: 40;
+  --z-slideover: 50;
+  --font-sans: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: "Gowun Batang", "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.display-xl { font-family: var(--font-display); font-size: 60px; line-height: 70px; font-weight: 700; letter-spacing: -0.01em; }
+.display-lg { font-family: var(--font-display); font-size: 38px; line-height: 48px; font-weight: 700; }
+.brand-name { font-family: var(--font-display); font-size: 22px; line-height: 26px; font-weight: 700; }
+.quote { font-family: var(--font-display); font-size: 18px; line-height: 30px; font-weight: 400; }
+.chat-title { font-family: var(--font-sans); font-size: 17px; line-height: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.section-label { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.02em; }
+.body-message { font-family: var(--font-sans); font-size: 15px; line-height: 25px; font-weight: 400; }
+.body { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 500; }
+.preview { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 400; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; }
+.badge { font-family: var(--font-sans); font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: 0.04em; }
+.fact-id { font-family: var(--font-mono); font-size: 11px; line-height: 14px; font-weight: 600; }
+@font-face { font-family: "Pretendard"; src: url("fonts/PretendardVariable.woff2") format("woff2"); font-weight: 45 920; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gowun Batang"; src: url("fonts/GowunBatang-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Gowun Batang"; src: url("fonts/GowunBatang-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/JetBrainsMono-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/JetBrainsMono-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }

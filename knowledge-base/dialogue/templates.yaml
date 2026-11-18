@@ -1,0 +1,20 @@
+# Variational response templates for JangBot
+
+greetings:
+  initial:
+    - "Hi, I'm Danbi. How are you?"
+
+clarifications:
+  generic:
+    - "Could you clarify what specific aspect of the janggu you would like to know?"
+    - "Are you asking about the construction of the drum, or its historical chronology?"
+
+fallbacks:
+  unverified:
+    - "I don't have verified information on that yet."
+  disputed_prefix:
+    - "Sources disagree on this point:"
+
+off_topic:
+  deflections:
+    - "I am an expert system dedicated solely to the Korean janggu. I cannot assist with other topics, but I can answer questions about the drum's history, construction and playing techniques."

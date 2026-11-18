@@ -1,0 +1,39 @@
+bot:
+  name: "Danbi"
+  greeting: "Hi, I'm Danbi. How are you?"
+  fallback_message: "I don't have verified information on that yet."
+  off_topic_message: "I am an expert system dedicated solely to the Korean janggu. I cannot answer questions on other topics."
+
+nlp:
+  confidence_threshold: 0.50
+  clarification_threshold: 0.35
+  typo_similarity_cutoff: 80
+
+pacing:
+  enabled: true
+  min_delay_ms: 300
+  max_delay_ms: 1200
+  words_per_minute: 250
+
+paths:
+  database: "knowledge-base/janggu.db"
+  schema: "knowledge-base/schema.sql"
+  rules_dir: "knowledge-base/rules"
+  lexicon_dir: "knowledge-base/lexicon"
+  dialogue_dir: "knowledge-base/dialogue"
+  unanswered_log: "logs/unanswered.log"
+
+agent:
+  use_llm_when_available: true
+  llm_provider: "openai"
+  llm_model: "gpt-4o-mini"
+  temperature: 0.3
+  checkpoints_db: "data/checkpoints.db"
+
+memory:
+  enabled: true
+  qdrant_path: "data/mem0_qdrant"
+  history_db: "data/mem0_history.db"
+  local_fallback_db: "data/local_memories.db"
+  embedder_model: "all-MiniLM-L6-v2"
+  top_k: 5

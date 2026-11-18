@@ -1,0 +1,226 @@
+# Expanded intent classification samples
+
+ask_origin:
+  samples:
+    - "How was it first created?"
+    - "How was the janggu created?"
+    - "When was it created?"
+    - "Where does the janggu come from?"
+    - "What is the origin of the janggu?"
+    - "When was the janggu first created?"
+    - "What is the earliest history of this drum?"
+    - "Did the janggu evolve from the yogo waist drum?"
+    - "Which country created the janggu?"
+    - "Who invented this drum?"
+    - "Where did this drum originate?"
+    - "Tell me about the ancient roots of the janggu."
+    - "How old is the janggu?"
+    - "What is the connection between the janggu and the Indian idakka?"
+    - "What drum did the janggu evolve from in Silla?"
+    - "What Goguryeo tomb murals or Baekje artifacts show waist drums?"
+    - "What does the Samguk Sagi or Geumdong Daehyangno show about early drums?"
+    - "What is shown on the Sangwonsa and King Seongdeok temple bells?"
+
+ask_etymology:
+  samples:
+    - "What is the etymology of janggu?"
+    - "Why is it called janggu or janggo?"
+    - "What does the name seyogo mean?"
+    - "What does the Sino-Korean word janggo mean?"
+    - "Why was the drum historically called seyogo?"
+    - "What do the Sino-Korean characters for janggo mean?"
+    - "Where did the name changgo or janggu come from?"
+
+ask_evolution:
+  samples:
+    - "How has the janggu evolved over time?"
+    - "How has the drum changed in modern times?"
+    - "What is the difference between traditional wooden janggu and modern synthetic FRP drums?"
+    - "Why didn't ceramic sajanggu drums replace wood for folk bands?"
+    - "Tell me about Samulnori and female drummers on stage."
+    - "What is Umulsai optical music recognition for Jeongganbo?"
+    - "What is the iJanggu hybrid digital instrument?"
+    - "Why do electronic drum pads fail compared to the iJanggu?"
+    - "How do modern piezo sensors and synthetic heads work on the janggu?"
+    - "How do MelCNN and MERT-v1 classify janggu strokes?"
+    - "How do FDTD digital waveguide meshes and FAUST simulate the janggu?"
+    - "What are Bela boards and Pure Data used for in the iJanggu?"
+    - "How do SR-μCT, p-XRF and 3D photogrammetry conserve antique janggu drums?"
+    - "What temperature and relative humidity do museums keep antique janggu at?"
+
+ask_military_role:
+  samples:
+    - "Was the janggu ever used in war or battle?"
+    - "Did the janggu affect the tide of battle in Korean wars?"
+    - "Was the janggu used in Daechwita military bands?"
+    - "What drum did Korean armies use instead of the janggu in war?"
+    - "Do modern South Korean military bands use the janggu?"
+
+ask_construction:
+  samples:
+    - "Tell me about the construction of the drum"
+    - "How is the drum constructed?"
+    - "What is the construction of the janggu?"
+    - "How is the janggu made?"
+    - "What materials are used to construct the janggu?"
+    - "What animal skin is on the drum heads?"
+    - "What wood is the drum body made of?"
+    - "Why are the two heads different?"
+    - "What is the jorongmok?"
+    - "How long is the janggu?"
+    - "What is the drum shell made of?"
+    - "What kind of hide is used for the heads?"
+    - "Tell me about the left head and right head."
+    - "What is the size and dimension of the drum?"
+    - "Is the body wood or metal?"
+    - "What is the narrow waist in the middle?"
+    - "What materials are used to make it?"
+    - "What is the ullimtong?"
+    - "Tell me about the Paulownia wood used for the body."
+    - "How do the joimjul and joigae tune the drum?"
+    - "What is the Hornbostel-Sachs classification of the janggu?"
+    - "What Hornbostel-Sachs number classifies the janggu?"
+    - "If I tighten the right side, does the left side pitch change?"
+    - "What is the diameter of the left head vs the right head?"
+    - "What are the acoustic vibration modes and Bessel functions of the drum?"
+    - "What is the wood density, shrinkage ratio and tyloses structure of Paulownia coreana?"
+    - "What are nakdong scorching, ottchil urushi lacquer and sturgeon isinglass glue?"
+    - "How do tap-tuning, graduated wall thickness and floating hoops prevent wolf tones?"
+
+ask_acoustics:
+  samples:
+    - "Why are the overtones of a janggu inharmonic instead of harmonic?"
+    - "How does 3D Scanning Laser Doppler Vibrometry SLDV map Bessel modes?"
+    - "How does Transfer Matrix Modeling TMM model the janggu as a Helmholtz resonator?"
+    - "What is the ADSR envelope and directional radiation pattern of bukpyeon vs chaepyeon?"
+    - "What happens if the jorongmok acoustic choke is carved too wide or too narrow?"
+
+ask_playing_technique:
+  samples:
+    - "How do you play it?"
+    - "How is it played?"
+    - "How do you play the janggu?"
+    - "What sticks are used to play the drum?"
+    - "Do you hit it with sticks or your bare hands?"
+    - "What is the difference between yeolchae and gungchae?"
+    - "How is the janggu played in court music compared to folk music?"
+    - "How do you strike the drum?"
+    - "What are the sticks called?"
+    - "Which hand holds which stick?"
+    - "Do you use one stick or two sticks?"
+    - "Can you hit it with your palm?"
+    - "Tell me about the bamboo stick."
+    - "How does court jeongak left-hand playing differ from pungmul?"
+    - "Tell me about the playing technique."
+    - "Tell me about playing technique."
+    - "How does the playing technique differ?"
+    - "What is the playing technique in court and folk music?"
+    - "How do court and folk drummers play differently?"
+    - "What are the five strokes?"
+    - "How do drummers hold the sticks and sit?"
+    - "Tell me about the round mallet."
+    - "What are the strokes of the janggu?"
+    - "What is deong, gung, tta, and gideok?"
+    - "What is a rimshot or jjak on the janggu?"
+    - "How do the gungchae Class 3 lever and yeolchae finger fulcrum work biomechanically?"
+
+ask_cultural_significance:
+  samples:
+    - "Why is the janggu important in Korean music?"
+    - "What types of music use the janggu?"
+    - "Is the janggu used in samul nori?"
+    - "What is nongak and is it related to the janggu?"
+    - "Is the drum used in shaman rituals?"
+    - "Why is it the most representative Korean drum?"
+    - "What is the cultural role of the janggu?"
+    - "Is it played during village festivals and folk dances?"
+    - "What are the rhythmic cycles or jangdan?"
+    - "Tell me about jinyangjo, jungmori, and hwimori."
+    - "What is the gutgeori rhythm?"
+    - "What is the asymmetric eonmori rhythm?"
+    - "What are chuimsae vocal cries?"
+    - "Which jangdan feels like a moderate walking pace?"
+    - "How about in Pansori battle stories?"
+    - "What is the difference between nongak and pungmul?"
+    - "Why isn't the janggu tuned to A=440Hz equal temperament, and how does it match ajaeng and piri sigimsae?"
+
+ask_chronology:
+  samples:
+    - "Tell me about its history."
+    - "Tell me about the history of the janggu."
+    - "Give me a timeline of the janggu."
+    - "What are the key historical dates for the drum?"
+    - "When was the earliest written record of the janggu?"
+    - "What happened in 1076 regarding the janggu?"
+    - "When did UNESCO recognize nongak?"
+    - "Tell me the historical milestones."
+    - "What are the dates in Goryeo and Joseon history?"
+    - "When did Choi Seung-hee create the janggu dance?"
+    - "What is recorded in the Goryeosa about the janggu?"
+    - "What is the Akhak Gwebeom from 1493?"
+    - "What did King Sejong invent regarding janggu notation?"
+    - "When did Song Dynasty China send janggu drums to Goryeo?"
+    - "Can you list me the chronology?"
+    - "Give me the dates in order."
+    - "Tell me about celadon sajanggu drums from the Goryeo dynasty."
+    - "When was the National Gugak Center founded in Seoul?"
+
+ask_difficulty:
+  samples:
+    - "Is it hard to play?"
+    - "Is it difficult to learn?"
+    - "How hard is it to play the janggu?"
+    - "Can a beginner learn it easily?"
+    - "Is the coordination tricky?"
+
+ask_favorite:
+  samples:
+    - "What is your favorite rhythm?"
+    - "Which rhythm do you like best?"
+    - "What is the best jangdan pattern?"
+    - "Which rhythmic cycle is your favorite?"
+
+ask_modern_popularity:
+  samples:
+    - "Do people still play it today?"
+    - "Is the janggu popular now?"
+    - "Is it still used in modern music?"
+    - "Do modern Koreans play the janggu?"
+
+conversational_acknowledgment:
+  samples:
+    - "That is really cool."
+    - "That is so interesting."
+    - "Cool, tell me more."
+    - "Nice, that makes a lot of sense."
+    - "Awesome."
+    - "Thank you, that helps."
+    - "I see, thanks."
+
+ask_source_explanation:
+  samples:
+    - "How do you know that?"
+    - "What is your source for that fact?"
+    - "Where did you get this information?"
+    - "Cite your sources."
+    - "Where did you read that?"
+    - "Prove it with citations."
+
+off_topic:
+  samples:
+    - "What is the capital of France?"
+    - "Who won the World Cup?"
+    - "Tell me a joke about dogs."
+    - "What is the weather outside in Paris?"
+    - "Write python code to sort an array."
+    - "Who is the president of the United States?"
+    - "Give me a recipe for chocolate cookies."
+    - "Tell me about quantum computing."
+    - "What is bitcoin and cryptocurrency?"
+    - "How do I fix a flat tire on my bicycle?"
+    - "What is the tallest building in the world?"
+    - "Can you write an essay about global warming?"
+    - "How do I play the Japanese taiko drum?"
+    - "How do I tune a Spanish acoustic guitar?"
+    - "How do you play the African djembe?"
+    - "Recommend a beginner piano or violin."

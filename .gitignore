@@ -1,0 +1,23 @@
+# Environment & secrets
+.env
+.venv/
+venv/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Runtime databases & logs
+data/
+logs/
+
+# Frontend build & dependencies
+Chat Interface/node_modules/
+Chat Interface/.svelte-kit/
+Chat Interface/build/
+
+# Local editor / tooling directories
+.agents/
+.claude/
+.vscode/
