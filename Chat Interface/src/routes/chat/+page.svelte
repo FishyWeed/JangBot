@@ -35,7 +35,6 @@
 	let isSending = $state(false);
 	let speakingId = $state('');
 	let lastReplyStatus = $state<string>('social');
-	let stageCollapsed = $state(false);
 	let errorBanner = $state<string | null>(null);
 	let sidebarOpen = $state(false);
 
@@ -283,43 +282,38 @@
 		<ErrorBanner message={errorBanner} ondismiss={() => (errorBanner = null)} />
 	{/if}
 
-	<div class="jb-chat-workspace">
-		<div class="jb-chat-col">
-			<MessageFeed
-				messages={feedMessages}
-				thinking={isSending}
-				connecting={isLoading}
-				{speakingId}
-				showAvatar={stageCollapsed}
-			>
-				{#snippet empty()}
-					<StarterPrompts prompts={STARTER_PROMPTS} onpick={sendMessage} />
-				{/snippet}
-				{#snippet after()}
-					{#if activeProfile && activeProfile.messages.length === 1 && !isSending}
-						<StarterPrompts greeting={false} prompts={STARTER_PROMPTS} onpick={sendMessage} />
-					{/if}
-				{/snippet}
-			</MessageFeed>
+	<MessageFeed
+		messages={feedMessages}
+		thinking={isSending}
+		connecting={isLoading}
+		{speakingId}
+		showAvatar={false}
+	>
+		{#snippet empty()}
+			<StarterPrompts prompts={STARTER_PROMPTS} onpick={sendMessage} />
+		{/snippet}
+		{#snippet after()}
+			{#if activeProfile && activeProfile.messages.length === 1 && !isSending}
+				<StarterPrompts greeting={false} prompts={STARTER_PROMPTS} onpick={sendMessage} />
+			{/if}
+		{/snippet}
+	</MessageFeed>
 
-			<Composer
-				bind:value={inputText}
-				disabled={isLoading || !activeProfile}
-				busy={isSending}
-				onsend={sendMessage}
-			/>
-		</div>
-
-		<DanbiStage
-			pose={stagePose}
-			speaking={!!speakingId}
-			thinking={isSending}
-			hasError={!!errorBanner}
-			collapsed={stageCollapsed}
-			ontoggle={() => (stageCollapsed = !stageCollapsed)}
-		/>
-	</div>
+	<Composer
+		bind:value={inputText}
+		disabled={isLoading || !activeProfile}
+		busy={isSending}
+		onsend={sendMessage}
+	/>
 </AppShell>
+
+<DanbiStage
+	pose={stagePose}
+	speaking={!!speakingId}
+	thinking={isSending}
+	hasError={!!errorBanner}
+	messageCount={feedMessages.length}
+/>
 
 {#if memoriesOpen}
 	<div

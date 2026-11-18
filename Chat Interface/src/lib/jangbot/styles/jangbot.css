@@ -102,18 +102,13 @@
 /* Grid: [sidebar | main]. The brand bar (logo + panel toggle) is pinned top-left at header height and NEVER moves or resizes:
    open or closed it keeps sidebar-width; closed, the chat body takes the full width under the unchanged top row. */
 .jb-shell { --jb-ease: cubic-bezier(.22,.8,.24,1); position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--header-height) minmax(0, 1fr); height: 100dvh; background: var(--bg-chat); overflow: hidden; }
-.jb-shell__main { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: transparent; position: relative; z-index: 1; }
+.jb-shell__main { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100dvh; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; background: transparent; position: relative; z-index: 1; }
 .jb-shell > .jb-sidebar { position: absolute; top: var(--header-height); bottom: 0; left: 0; height: auto; width: var(--sidebar-width); z-index: var(--z-slideover); transform: none; transition: transform var(--duration-panel) var(--jb-ease), opacity var(--duration-fast); box-shadow: var(--shadow-slideover); }
 .jb-shell.is-collapsed > .jb-sidebar { transform: translateX(-100%); opacity: 0; pointer-events: none; box-shadow: none; }
 .jb-shell .jb-header { padding-left: calc(var(--sidebar-width) + var(--space-4)); }
-.jb-feed, .jb-composer, .jb-error, .jb-chat-workspace { transition: margin-left var(--duration-panel) var(--jb-ease); }
+.jb-feed, .jb-composer, .jb-error { transition: margin-left var(--duration-panel) var(--jb-ease); }
 .jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-feed,
-.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-composer,
-.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-chat-workspace { margin-left: var(--sidebar-width); }
-.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-chat-workspace .jb-feed,
-.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-chat-workspace .jb-composer { margin-left: 0; }
-.jb-chat-workspace { display: flex; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
-.jb-chat-col { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-composer { margin-left: var(--sidebar-width); }
 .jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-error { margin-left: calc(var(--sidebar-width) + var(--space-4)); }
 .jb-backdrop { position: absolute; inset: 0; background: var(--overlay-backdrop); z-index: var(--z-backdrop); opacity: 0; pointer-events: none; transition: opacity var(--duration-panel); }
 
@@ -183,7 +178,7 @@
 .jb-status code { font-family: var(--font-mono); font-size: 11px; }
 
 /* ---------- D. chat header ---------- */
-.jb-header { height: var(--header-height); flex: none; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4); background: var(--bg-sidebar); border-bottom: 1px solid var(--border-default); position: relative; z-index: 2; }
+.jb-header { height: var(--header-height); flex: none; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4); background: var(--bg-sidebar); border-bottom: 1px solid var(--border-default); position: sticky; top: 0; z-index: 6; }
 .jb-header__titles { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .jb-header__title { font-size: 17px; line-height: 24px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jb-header__sub { font-size: 13px; line-height: 18px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -210,7 +205,7 @@
 .jb-error .jb-iconbtn:hover, .jb-error .jb-iconbtn.is-hover { background: rgba(180, 35, 24, 0.08); color: var(--error-text); }
 
 /* ---------- G. message feed ---------- */
-.jb-feed { flex: 1; min-height: 0; overflow-y: auto; scroll-behavior: smooth; padding: var(--space-6) var(--space-6) var(--space-4); }
+.jb-feed { flex: 1 0 auto; overflow: visible; padding: var(--space-6) var(--space-6) var(--space-8); }
 .jb-feed__col { max-width: var(--message-max-width); margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-3); }
 @keyframes jb-msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .jb-msg { display: flex; gap: var(--space-2); align-items: flex-start; animation: jb-msg-in .22s cubic-bezier(.22,.8,.24,1) both; }
@@ -263,7 +258,7 @@
 .jb-chip__emoji { font-family: var(--font-sans); font-weight: 700; color: var(--highlight-text); font-size: 12px; }
 
 /* ---------- I. composer ---------- */
-.jb-composer { flex: none; padding: var(--space-2) var(--composer-padding) var(--composer-padding); background: linear-gradient(to bottom, transparent, var(--bg-chat) 30%); }
+.jb-composer { position: sticky; bottom: 0; z-index: 6; flex: none; padding: var(--space-3) var(--composer-padding) 38px; background: linear-gradient(to bottom, transparent, var(--bg-chat) 36%); }
 .jb-composer__box { max-width: var(--message-max-width); margin: 0 auto; display: flex; align-items: flex-end; gap: var(--space-2); padding: 6px 8px 6px var(--space-4); background: var(--bg-composer); border: 1.5px solid var(--border-ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-composer); transition: box-shadow .15s; }
 .jb-composer__box:focus-within { box-shadow: var(--shadow-composer), 0 0 0 4px var(--brand-blue-soft); }
 .jb-composer__input { flex: 1; min-width: 0; resize: none; border: 0; outline: 0; background: transparent; font: 400 15px/24px var(--font-sans); color: var(--text-primary); padding: 6px 0; height: 36px; max-height: 160px; min-height: 36px; overflow-y: auto; }
@@ -519,9 +514,8 @@
   .jb-shell .jb-sidebar__inner { width: 100%; max-width: none; }
   .jb-shell .jb-backdrop { top: var(--header-height); }
   .jb-shell.is-open .jb-backdrop { opacity: 1; pointer-events: auto; }
-  .jb-feed { padding: var(--space-5) var(--space-5) var(--space-3); margin-left: 0; }
+  .jb-feed { padding: var(--space-5) var(--space-5) var(--space-6); margin-left: 0; }
   .jb-composer { margin-left: 0; }
-  .jb-chat-workspace { flex-direction: column; margin-left: 0; }
   .jb-drawer, .jb-error { margin-left: var(--space-5); margin-right: var(--space-5); }
 }
 
@@ -546,7 +540,7 @@
   .jb-cite__item { gap: var(--space-2); padding-left: 10px; }
   .jb-drawer, .jb-error { margin-left: var(--space-3); margin-right: var(--space-3); }
   .jb-drawer__body { max-height: 40vh; }
-  .jb-composer { padding: 6px var(--space-3) max(var(--space-3), env(safe-area-inset-bottom)); }
+  .jb-composer { padding: 8px var(--space-3) max(28px, calc(env(safe-area-inset-bottom) + 18px)); }
   .jb-composer__box { padding: 6px 6px 6px 14px; border-radius: 18px; }
   .jb-composer__input { font-size: 16px; } /* 16px stops iOS zooming into the field */
   .jb-empty { gap: 18px; padding: var(--space-3) 0; }

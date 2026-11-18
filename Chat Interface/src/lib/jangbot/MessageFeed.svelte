@@ -14,12 +14,28 @@
   let el = $state();
   let pinned = true;
 
-  function onScroll() {
-    if (el) pinned = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  function getScroller() {
+    if (!el) return undefined;
+    const main = el.closest('.jb-shell__main');
+    return main instanceof HTMLElement ? main : el;
   }
+
+  function onScroll() {
+    const s = getScroller();
+    if (s) pinned = s.scrollHeight - s.scrollTop - s.clientHeight < 96;
+  }
+
+  $effect(() => {
+    const s = getScroller();
+    if (!s || s === el) return;
+    s.addEventListener('scroll', onScroll, { passive: true });
+    return () => s.removeEventListener('scroll', onScroll);
+  });
+
   $effect(() => {
     messages.length; thinking; // follow new content
-    if (el && pinned) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    const s = getScroller();
+    if (s && pinned) s.scrollTo({ top: s.scrollHeight, behavior: 'smooth' });
   });
 </script>
 
