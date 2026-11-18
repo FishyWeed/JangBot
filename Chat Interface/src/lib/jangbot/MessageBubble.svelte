@@ -5,9 +5,9 @@
   /**
    * One message. Pass `children` to render your own content (e.g. markdown) instead of `content`.
    * @type {{ role: 'user' | 'assistant', content?: string, citations?: import('./types').Citation[],
-   *   mascotState?: import('./types').MascotState, children?: import('svelte').Snippet }}
+   *   mascotState?: import('./types').MascotState, showAvatar?: boolean, children?: import('svelte').Snippet }}
    */
-  let { role, content = '', citations = [], mascotState = 'idle', children } = $props();
+  let { role, content = '', citations = [], mascotState = 'idle', showAvatar = true, children } = $props();
   let paragraphs = $derived(content.split(/\n{2,}/).filter(Boolean));
 </script>
 
@@ -21,7 +21,7 @@
   </div>
 {:else}
   <div class="jb-msg">
-    <Mascot size={36} state={mascotState} />
+    {#if showAvatar}<Mascot size={36} state={mascotState} />{/if}
     <div class="jb-msg__stack">
       <span class="jb-msg__name">Danbi</span>
       <div class="jb-bubble jb-bubble--assistant">

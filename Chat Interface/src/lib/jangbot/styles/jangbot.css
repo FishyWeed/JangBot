@@ -106,9 +106,14 @@
 .jb-shell > .jb-sidebar { position: absolute; top: var(--header-height); bottom: 0; left: 0; height: auto; width: var(--sidebar-width); z-index: var(--z-slideover); transform: none; transition: transform var(--duration-panel) var(--jb-ease), opacity var(--duration-fast); box-shadow: var(--shadow-slideover); }
 .jb-shell.is-collapsed > .jb-sidebar { transform: translateX(-100%); opacity: 0; pointer-events: none; box-shadow: none; }
 .jb-shell .jb-header { padding-left: calc(var(--sidebar-width) + var(--space-4)); }
-.jb-feed, .jb-composer, .jb-error { transition: margin-left var(--duration-panel) var(--jb-ease); }
+.jb-feed, .jb-composer, .jb-error, .jb-chat-workspace { transition: margin-left var(--duration-panel) var(--jb-ease); }
 .jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-feed,
-.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-composer { margin-left: var(--sidebar-width); }
+.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-composer,
+.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-chat-workspace { margin-left: var(--sidebar-width); }
+.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-chat-workspace .jb-feed,
+.jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-chat-workspace .jb-composer { margin-left: 0; }
+.jb-chat-workspace { display: flex; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+.jb-chat-col { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
 .jb-app[data-layout="desktop"] .jb-shell:not(.is-collapsed) .jb-error { margin-left: calc(var(--sidebar-width) + var(--space-4)); }
 .jb-backdrop { position: absolute; inset: 0; background: var(--overlay-backdrop); z-index: var(--z-backdrop); opacity: 0; pointer-events: none; transition: opacity var(--duration-panel); }
 
@@ -516,6 +521,7 @@
   .jb-shell.is-open .jb-backdrop { opacity: 1; pointer-events: auto; }
   .jb-feed { padding: var(--space-5) var(--space-5) var(--space-3); margin-left: 0; }
   .jb-composer { margin-left: 0; }
+  .jb-chat-workspace { flex-direction: column; margin-left: 0; }
   .jb-drawer, .jb-error { margin-left: var(--space-5); margin-right: var(--space-5); }
 }
 

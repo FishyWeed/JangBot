@@ -6,9 +6,9 @@
   /**
    * Scrolling conversation. Shows `empty` (e.g. <StarterPrompts>) when there are no messages.
    * @type {{ messages?: import('./types').Message[], thinking?: boolean, connecting?: boolean,
-   *   speakingId?: string, empty?: import('svelte').Snippet, after?: import('svelte').Snippet }}
+   *   speakingId?: string, showAvatar?: boolean, empty?: import('svelte').Snippet, after?: import('svelte').Snippet }}
    */
-  let { messages = [], thinking = false, connecting = false, speakingId, empty, after } = $props();
+  let { messages = [], thinking = false, connecting = false, speakingId, showAvatar = true, empty, after } = $props();
 
   /** @type {HTMLDivElement | undefined} */
   let el = $state();
@@ -35,9 +35,9 @@
   {:else}
     <div class="jb-feed__col" aria-live="polite">
       {#each messages as m (m.id)}
-        <MessageBubble role={m.role} content={m.content} citations={m.citations} mascotState={m.id === speakingId ? 'speaking' : 'idle'} />
+        <MessageBubble role={m.role} content={m.content} citations={m.citations} mascotState={m.id === speakingId ? 'speaking' : 'idle'} {showAvatar} />
       {/each}
-      {#if thinking}<TypingIndicator />{/if}
+      {#if thinking}<TypingIndicator {showAvatar} />{/if}
       {@render after?.()}
     </div>
   {/if}

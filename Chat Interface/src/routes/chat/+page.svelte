@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '../../lib/api';
+	import DanbiStage from '../../lib/components/DanbiStage.svelte';
 	import {
 		AppShell,
 		Sidebar,
@@ -33,8 +34,28 @@
 	let isLoading = $state(true);
 	let isSending = $state(false);
 	let speakingId = $state('');
+	let lastReplyStatus = $state<string>('social');
+	let stageCollapsed = $state(false);
 	let errorBanner = $state<string | null>(null);
 	let sidebarOpen = $state(false);
+
+	let stagePose = $derived<'drumming' | 'wave' | 'read' | 'lantern' | 'bow' | 'sad'>(
+		errorBanner
+			? 'sad'
+			: isSending
+				? 'read'
+				: speakingId
+					? lastReplyStatus === 'social'
+						? 'wave'
+						: lastReplyStatus === 'off_topic' ||
+							  lastReplyStatus === 'fallback' ||
+							  lastReplyStatus === 'clarification'
+							? 'bow'
+							: 'drumming'
+					: (activeProfile?.messages.length ?? 0) <= 1
+						? 'wave'
+						: 'lantern'
+	);
 
 	// Memories & confirm UI state
 	let memoriesOpen = $state(false);
@@ -182,11 +203,16 @@
 				messages: [...withoutTemp, response.user_message, response.assistant_message]
 			};
 			speakingId = response.assistant_message.id;
+			lastReplyStatus = response.assistant_message.status ?? 'answered';
+			const speakDuration = Math.min(
+				Math.max(response.assistant_message.content.length * 18, 2800),
+				5500
+			);
 			setTimeout(() => {
 				if (speakingId === response.assistant_message.id) {
 					speakingId = '';
 				}
-			}, 1200);
+			}, speakDuration);
 			await refreshProfiles();
 		} catch (err) {
 			errorBanner = err instanceof Error ? err.message : 'Failed to reach JangBot server.';
@@ -257,28 +283,42 @@
 		<ErrorBanner message={errorBanner} ondismiss={() => (errorBanner = null)} />
 	{/if}
 
-	<MessageFeed
-		messages={feedMessages}
-		thinking={isSending}
-		connecting={isLoading}
-		{speakingId}
-	>
-		{#snippet empty()}
-			<StarterPrompts prompts={STARTER_PROMPTS} onpick={sendMessage} />
-		{/snippet}
-		{#snippet after()}
-			{#if activeProfile && activeProfile.messages.length === 1 && !isSending}
-				<StarterPrompts greeting={false} prompts={STARTER_PROMPTS} onpick={sendMessage} />
-			{/if}
-		{/snippet}
-	</MessageFeed>
+	<div class="jb-chat-workspace">
+		<div class="jb-chat-col">
+			<MessageFeed
+				messages={feedMessages}
+				thinking={isSending}
+				connecting={isLoading}
+				{speakingId}
+				showAvatar={stageCollapsed}
+			>
+				{#snippet empty()}
+					<StarterPrompts prompts={STARTER_PROMPTS} onpick={sendMessage} />
+				{/snippet}
+				{#snippet after()}
+					{#if activeProfile && activeProfile.messages.length === 1 && !isSending}
+						<StarterPrompts greeting={false} prompts={STARTER_PROMPTS} onpick={sendMessage} />
+					{/if}
+				{/snippet}
+			</MessageFeed>
 
-	<Composer
-		bind:value={inputText}
-		disabled={isLoading || !activeProfile}
-		busy={isSending}
-		onsend={sendMessage}
-	/>
+			<Composer
+				bind:value={inputText}
+				disabled={isLoading || !activeProfile}
+				busy={isSending}
+				onsend={sendMessage}
+			/>
+		</div>
+
+		<DanbiStage
+			pose={stagePose}
+			speaking={!!speakingId}
+			thinking={isSending}
+			hasError={!!errorBanner}
+			collapsed={stageCollapsed}
+			ontoggle={() => (stageCollapsed = !stageCollapsed)}
+		/>
+	</div>
 </AppShell>
 
 {#if memoriesOpen}
