@@ -13,7 +13,10 @@
   let { onstart, mascotSrc, mascotAlt = 'Danbi, the janggu mascot' } = $props();
 
   const states = /** @type {const} */ ([['idle', 'Idle', 'Waiting quietly'], ['thinking', 'Thinking', 'Looking it up…'], ['speaking', 'Speaking', 'Answering']]);
-  const moods = /** @type {const} */ ([['wave', 'Hello', '안녕!'], ['umbrella', 'Rainy walk', '우산 아래'], ['read', 'Looking it up', '찾아보는 중'], ['lantern', 'Night light', '청사초롱'], ['bow', 'Thank you', '감사합니다'], ['sleep', 'Resting', '쿨쿨']]);
+  const moods = /** @type {const} */ ([['drumming', 'Drumming', '장구 연주'], ['wave', 'Hello', '안녕!'], ['umbrella', 'Rainy walk', '우산 아래'], ['read', 'Looking it up', '찾아보는 중'], ['lantern', 'Night light', '청사초롱'], ['bow', 'Thank you', '감사합니다'], ['sleep', 'Resting', '쿨쿨']]);
+
+  /** @type {{ kind: 'pose', value: 'drumming' | 'wave' | 'umbrella' | 'read' | 'lantern' | 'bow' | 'sleep', label: string, sub: string } | { kind: 'avatar', value: 'idle' | 'thinking' | 'speaking', label: string, sub: string }} */
+  let activeShowcase = $state({ kind: 'pose', value: 'drumming', label: 'Drumming', sub: '장구 연주' });
 </script>
 
 <div class="jb-app">
@@ -62,7 +65,20 @@
         {#if mascotSrc}
           <img class="jb-slot__img" src={mascotSrc} alt={mascotAlt} />
         {:else}
-          <div class="jb-slot__fig"><Danbi pose="drumming" /></div>
+          {#if activeShowcase.kind === 'pose'}
+            {#key activeShowcase.value}
+              <div class="jb-slot__fig"><Danbi pose={activeShowcase.value} /></div>
+            {/key}
+          {:else}
+            {#key activeShowcase.value}
+              <div class="jb-slot__avatar"><Mascot size={220} state={activeShowcase.value} framed={false} /></div>
+            {/key}
+          {/if}
+          <span class="jb-slot__caption">
+            <b>{activeShowcase.label}</b>
+            <span class="jb-slot__sep" aria-hidden="true">·</span>
+            <span>{activeShowcase.sub}</span>
+          </span>
         {/if}
       </div>
       <div class="jb-namecard">
@@ -71,14 +87,30 @@
         <p class="jb-namecard__muted">Red lacquer body, hanji drum heads, blue hoops and a lantern-amber waist band.</p>
         <div class="jb-states">
           {#each states as [s, name, note]}
-            <div class="jb-state"><Mascot size={52} state={s} /><b>{name}</b><span>{note}</span></div>
+            <button
+              type="button"
+              class="jb-state"
+              class:is-active={activeShowcase.kind === 'avatar' && activeShowcase.value === s}
+              aria-pressed={activeShowcase.kind === 'avatar' && activeShowcase.value === s}
+              onclick={() => (activeShowcase = { kind: 'avatar', value: s, label: name, sub: note })}
+            >
+              <Mascot size={52} state={s} /><b>{name}</b><span>{note}</span>
+            </button>
           {/each}
         </div>
       </div>
     </div>
     <div class="jb-moods">
       {#each moods as [pose, name, ko]}
-        <div class="jb-mood"><div class="jb-mood__fig"><Danbi {pose} /></div><b>{name}</b><span lang="ko">{ko}</span></div>
+        <button
+          type="button"
+          class="jb-mood"
+          class:is-active={activeShowcase.kind === 'pose' && activeShowcase.value === pose}
+          aria-pressed={activeShowcase.kind === 'pose' && activeShowcase.value === pose}
+          onclick={() => (activeShowcase = { kind: 'pose', value: pose, label: name, sub: ko })}
+        >
+          <div class="jb-mood__fig"><Danbi {pose} /></div><b>{name}</b><span lang="ko">{ko}</span>
+        </button>
       {/each}
     </div>
   </section>
