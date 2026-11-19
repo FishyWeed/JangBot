@@ -1,6 +1,8 @@
 """LangGraph tools wrapping verified Janggu SQLite knowledge and rule inference."""
 
 import json
+import math
+import re
 from typing import Any, Dict, List
 from langchain_core.tools import tool
 from src.knowledge.repository import KnowledgeRepository
@@ -28,24 +30,58 @@ class JangguToolchain:
         return t
 
     def search_facts_sync(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Rank verified facts in janggu.db by keyword overlap and attach citations."""
-        raw_tokens = [t.lower() for t in query.split() if len(t) >= 3]
-        facts = self.repository.get_verified_facts()
-        scored: List[tuple[int, Dict[str, Any]]] = []
+        """Rank verified and disputed facts in janggu.db using IDF-weighted word/stem overlap."""
+        raw_tokens = [
+            t.lower()
+            for t in re.findall(r"[a-zA-Z0-9\uAC00-\uD7A3μ°]+", query)
+            if len(t) >= 3 or t.isdigit()
+        ]
+        if not raw_tokens:
+            return []
 
-        for fact in facts:
-            haystack = f"{fact['category']} {fact['statement']} {fact.get('period') or ''}".lower()
-            score = 0
-            for tok in raw_tokens:
+        facts = list(self.repository.get_verified_facts()) + list(self.repository.get_disputed_facts())
+        fact_word_sets = [
+            (
+                fact,
+                set(re.findall(r"[a-z0-9\uAC00-\uD7A3μ°]+", f"{fact['category']} {fact['statement']} {fact.get('period') or ''}".lower())),
+            )
+            for fact in facts
+        ]
+
+        def _matches_word_set(tok: str, words: set) -> bool:
+            if tok in words or f"{tok}s" in words:
+                return True
+            if len(tok) >= 4:
                 stem = self._stem(tok)
-                if tok in haystack or (len(stem) >= 3 and stem in haystack):
-                    score += 1
-            if score > 0:
+                if len(stem) >= 4 and any(self._stem(w) == stem or w.startswith(stem) for w in words):
+                    return True
+            return False
+
+        # IDF weighting ensures rare organology/physics tokens outrank generic terms like 'drum' or 'wood'
+        doc_freq = {
+            tok: sum(1 for _, words in fact_word_sets if _matches_word_set(tok, words))
+            for tok in set(raw_tokens)
+        }
+
+        scored: List[tuple[float, Dict[str, Any]]] = []
+        for fact, words in fact_word_sets:
+            score = 0.0
+            for tok in set(raw_tokens):
+                if _matches_word_set(tok, words):
+                    score += 1.0 / math.log(2.0 + doc_freq[tok])
+            if score > 0.0:
                 enriched = dict(fact)
                 enriched["citations"] = self.repository.get_citations_for_fact(fact["id"])
                 scored.append((score, enriched))
 
-        scored.sort(key=lambda item: (-item[0], item[1].get("year_exact") or 9999, item[1]["id"]))
+        scored.sort(
+            key=lambda item: (
+                -round(item[0], 6),
+                item[1].get("status") != "Verified",
+                item[1].get("year_exact") or 9999,
+                item[1]["id"],
+            )
+        )
         return [item[1] for item in scored[:limit]]
 
     def explain_sources_sync(self, fact_ids: List[str], session: Any = None) -> Dict[str, Any]:

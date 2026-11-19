@@ -47,6 +47,8 @@ ask_evolution:
     - "What are Bela boards and Pure Data used for in the iJanggu?"
     - "How do SR-μCT, p-XRF and 3D photogrammetry conserve antique janggu drums?"
     - "What temperature and relative humidity do museums keep antique janggu at?"
+    - "How does the 2D FDTD rectilinear equation simulate the janggu mesh on Bela?"
+    - "How does EBNF SubJeonggan grammar encode swing and rubato in Jeongganbo?"
 
 ask_military_role:
   samples:
@@ -86,6 +88,7 @@ ask_construction:
     - "What is the wood density, shrinkage ratio and tyloses structure of Paulownia coreana?"
     - "What are nakdong scorching, ottchil urushi lacquer and sturgeon isinglass glue?"
     - "How do tap-tuning, graduated wall thickness and floating hoops prevent wolf tones?"
+    - "How are janggu hides tanned and cured to align collagen fibers and preserve viscoelasticity?"
 
 ask_acoustics:
   samples:
@@ -94,6 +97,7 @@ ask_acoustics:
     - "How does Transfer Matrix Modeling TMM model the janggu as a Helmholtz resonator?"
     - "What is the ADSR envelope and directional radiation pattern of bukpyeon vs chaepyeon?"
     - "What happens if the jorongmok acoustic choke is carved too wide or too narrow?"
+    - "What is the wave speed formula and phase-alignment behavior across both membranes?"
 
 ask_playing_technique:
   samples:

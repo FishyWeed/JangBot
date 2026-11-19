@@ -93,7 +93,7 @@ class LongTermMemoryManager:
 
         llm_block: Optional[Dict[str, Any]] = None
         provider = self.llm_client.provider
-        model = self.llm_client.model
+        model = self.llm_client.effective_model
 
         if provider == "gemini":
             api_key = os.getenv("GEMINI_API_KEY", "").strip()
@@ -275,8 +275,8 @@ class LongTermMemoryManager:
                     if mem_id:
                         results.append({"id": mem_id, "memory": fact, "slot": slot, "source": "local_slot"})
 
-        # When Mem0 + LLM backend is active, also run Mem0's semantic extraction & deduplication
-        if self._mem0 is not None:
+        # When Mem0 + LLM backend is active (and not in timeout cooldown), run Mem0's semantic extraction
+        if self._mem0 is not None and not getattr(self.llm_client, "in_cooldown", False):
             try:
                 mem0_resp = self._mem0.add(messages, user_id=user_id, metadata=metadata or {})
                 mem_items = mem0_resp.get("results", []) if isinstance(mem0_resp, dict) else (mem0_resp or [])

@@ -201,6 +201,42 @@ NEW_FACTS = [
         "Museums archive antique janggu via 3D photogrammetry digital twins and 3D-printed replicas while holding climate equilibrium near 20°C and 50 to 55% relative humidity to prevent jorongmok micro-fracturing; the National Museum of Korea's Goryeo celadon sajanggu Duksu 1726 features bisaek inlay fired at ~1,150°C in Gangjin kilns.",
         None, 918, 1392, "Conservation", "Verified", None, "S34", "Museum conservation climate controls & Duksu 1726 photogrammetric archive",
     ),
+    (
+        "F60",
+        "construction",
+        "Unlike Western orchestral drums that use chemical tanning, traditional Korean janggu hides are shaved to micron tolerances, soaked to remove excess proteins and naturally cured to align collagen fibers radially while preserving hide viscoelasticity under bamboo mallet impact.",
+        None, None, None, "Traditional", "Verified", None, "S31", "Collagen viscoelasticity and natural hide tanning specifications",
+    ),
+    (
+        "F61",
+        "construction",
+        "Transverse membrane vibration obeys the 2D polar wave equation with wave speed c = sqrt(tau / rho_s) and Bessel functions J_m(k_mn r); edge-striking byeonjuk suppresses the (0,1) fundamental while exponentially exciting asymmetric modes (m >= 1), and mismatched areal mass densities keep c_left << c_right so the heads never phase-align.",
+        None, None, None, "Acoustic", "Verified", None, "S32", "2D wave equation, wave propagation speed and modal phase decoupling",
+    ),
+    (
+        "F62",
+        "construction",
+        "3D Scanning Laser Doppler Vibrometry (SLDV) reflects laser light off vibrating membranes for non-contact surface velocity measurement and catches misaligned joigae wedges, while Transfer Matrix Modeling cavity impedance Z = j*omega*rho_0*L_eff/A ([p1; V1] = T_n T_c [p3; V3]) models viscous and thermal boundary losses; chaepyeon exhibits fast Attack and Decay with near-zero Sustain whereas bukpyeon sustains a prolonged cavity Release.",
+        None, None, None, "Acoustic", "Verified", None, "S32", "SLDV wedge diagnostics, TMM cavity matrix and ADSR asymmetry",
+    ),
+    (
+        "F63",
+        "chronology",
+        "Jeongganbo EBNF grammar formalizes Score ::= Gak+, Gak ::= Jeonggan+, Jeonggan ::= (Stroke | SubJeonggan | Rest), SubJeonggan ::= Stroke Stroke | Stroke Rest, Stroke ::= 'Deong' | 'Gung' | 'Tta' | 'Gideok' | 'Jjak', and Rest ::= '△' | '-', enabling algorithmic interpolation of swing and rubato timing; MelCNN classifiers separate broadband tta onset smears from high-Q low-frequency gung resonance peaks.",
+        1447, 1447, None, "Joseon to Modern", "Verified", None, "S33", "Jeongganbo EBNF production rules & MelCNN spectrogram signatures",
+    ),
+    (
+        "F64",
+        "evolution",
+        "2D FDTD Digital Waveguide Mesh simulation updates rectilinear membrane nodes with p(i,j,n+1) = 0.5*(p(i-1,j,n)+p(i+1,j,n)+p(i,j-1,n)+p(i,j+1,n)) - p(i,j,n-1) parameterized with wooden hoop compliance and joimjul boundary tension, while the hybrid iJanggu mounts piezo contact mics directly inside the Paulownia shell or beneath the bukpyeon.",
+        None, None, None, "Modern", "Verified", None, "S33", "Rectilinear FDTD update form & piezo shell/head sensor placement",
+    ),
+    (
+        "F65",
+        "cultural_use",
+        "Honam Udo seoljanggu master Kim Byeong-seop (1921-1987) passed down distinctive grip and solo rhythmic phrasing, whereas seated court performers (Jeongak/Aak) adhere strictly to scores; in contemporary Samulnori, ethnographers track the 'masculinization of women drummers' adopting forceful kinetic postures alongside historically male Namsadang lineages.",
+        None, 1921, 1987, "Modern", "Verified", None, "S30", "Seoljanggu master lineage and gender dynamics in Samulnori",
+    ),
 ]
 
 

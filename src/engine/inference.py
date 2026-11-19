@@ -234,29 +234,56 @@ class InferenceEngine:
                     session=session,
                     separator="\n\n",
                 )
+            elif "ebnf_grammar" in entities:
+                all_chron = self.repository.get_verified_facts("chronology")
+                selected_facts = [f for f in all_chron if f["id"] in {"F63", "F29"}] + [f for f in evo_facts if f["id"] in {"F47", "F56"}]
+                reply_text = compose_variation(
+                    "rule::evo_ebnf",
+                    (
+                        (
+                            "Jeongganbo computational grammars define a plaintext EBNF structure for synthetic playback and optical engraving (Umulsai):\n"
+                            "- Score ::= Gak+, Gak ::= Jeonggan+, Jeonggan ::= (Stroke | SubJeonggan | Rest)\n"
+                            "- SubJeonggan ::= Stroke Stroke | Stroke Rest, Stroke ::= 'Deong' | 'Gung' | 'Tta' | 'Gideok' | 'Jjak', Rest ::= '△' | '-'\n"
+                            "By adjusting temporal values on SubJeonggan cells, algorithms interpolate expressive micro-timing swing and rubato—complementing MelCNN classifiers tracking sharp tta onset smears and high-Q gung resonance peaks."
+                        ),
+                        (
+                            "Formalizing King Sejong's 1447 grid, Jeongganbo EBNF defines Score ::= Gak+ -> Gak ::= Jeonggan+ -> SubJeonggan ::= Stroke Stroke | Stroke Rest across Stroke tokens ('Deong', 'Gung', 'Tta', 'Gideok', 'Jjak') and Rest symbols ('△' | '-'). SubJeonggan duration scaling models human swing and rubato, pairing cleanly with MelCNN onset-smear vs. high-Q gung stroke detection."
+                        ),
+                        (
+                            "Plaintext EBNF production rules (Score ::= Gak+, Gak ::= Jeonggan+, Jeonggan ::= Stroke | SubJeonggan | Rest with SubJeonggan allowing swing/rubato micro-timing) power algorithmic score conversion in KAIST's Umulsai, alongside MelCNN spectrogram recognition distinguishing broadband tta onset smears from high-Q gung peaks."
+                        ),
+                    ),
+                    (
+                        "Want to look at FDTD waveguide meshes or how Jeongganbo gak columns are tuned microtonally?",
+                        "Curious how KAIST's Umulsai pairs EBNF grammars with JSON layout rules?",
+                        "Should we examine 2D FDTD membrane synthesis on Bela microcontrollers next?",
+                    ),
+                    session=session,
+                    separator="\n\n",
+                )
             elif "ml_dsp" in entities:
-                selected_facts = [f for f in evo_facts if f["id"] in {"F56", "F57", "F47", "F48"}]
+                selected_facts = [f for f in evo_facts if f["id"] in {"F56", "F57", "F64", "F47", "F48"}]
                 reply_text = compose_variation(
                     "rule::evo_ml_dsp",
                     (
                         (
                             "Computational organology models and analyzes the janggu across three digital pipelines:\n"
-                            "- Stroke classification ML: Transient Mel-spectrogram CNNs (MelCNN), hybrid CNN/RNNs and fine-tuned MERT-v1 (95M parameters) classify piezoelectric/accelerometer strike events cleanly using Macro F1 and Event F1/IoU metrics (distinct from F0CNN/RMVPE used for vocal sigimsae).\n"
-                            "- FDTD / Digital Waveguide Mesh (DWM): Audio DSP code in FAUST simulates dual circular skins via 2D FDTD meshes under CFL stability conditions coupled to a 1D cavity guide.\n"
-                            "- Hardware iJanggu & Umulsai: Embedded Bela microcontrollers run Pure Data or FAUST straight from piezo pickups to bypass MIDI trigger latency, while KAIST's Umulsai OMR parses Jeongganbo via EBNF."
+                            "- Stroke classification ML: Transient Mel-spectrogram CNNs (MelCNN), hybrid CNN/RNNs and fine-tuned MERT-v1 (95M parameters) distinguish broadband tta onset smears from high-Q gung peaks over piezo/accelerometer streams via Macro F1 and Event F1/IoU (distinct from F0CNN/RMVPE for vocal sigimsae).\n"
+                            "- FDTD / Digital Waveguide Mesh (DWM): Coded in FAUST under CFL stability conditions coupled to a 1D shell guide, rectilinear membrane updates follow p(i,j,n+1) = 0.5*(p(i-1,j,n)+p(i+1,j,n)+p(i,j-1,n)+p(i,j+1,n)) - p(i,j,n-1) with hoop compliance and joimjul boundary tension.\n"
+                            "- Hardware iJanggu & Umulsai: Embedded piezo contact mics mounted inside the Paulownia shell or beneath the bukpyeon feed Bela boards running Pure Data or FAUST without MIDI latency."
                         ),
                         (
-                            "Modern audio computing splits between ML stroke analysis and physical synthesis:\n"
-                            "Because percussion strikes produce broadband transients rather than smooth vocal F0 (sigimsae) curves tracked by F0CNN/RMVPE, researchers rely on MelCNN, CNN/RNN and MERT-v1 (95M parameters) over piezo/accelerometer streams (scored by Macro F1 and Event F1/IoU). On the synthesis side, 2D FDTD Digital Waveguide Meshes run in FAUST within CFL limits alongside a 1D ullimtong cavity—powering real-time Bela boards (Pure Data / FAUST) on the piezo-equipped iJanggu without MIDI latency."
+                            "Modern audio computing pairs transient ML transcription with physically modeled DSP:\n"
+                            "Because percussion strikes yield sharp tta onset smears and low-Q/high-Q gung peaks rather than vocal F0 curves tracked by F0CNN/RMVPE, models apply MelCNN, CNN/RNN and MERT-v1 (95M) with Macro F1 and Event F1/IoU metrics. Meanwhile, FAUST physical synthesis runs CFL-stable 2D FDTD Digital Waveguide Meshes [p(i,j,n+1) = 0.5*(neighbors) - p(i,j,n-1)] coupled to a 1D cavity, powered by iJanggu piezo pickups inside the shell or beneath bukpyeon directly into Bela (Pure Data / FAUST) without MIDI latency."
                         ),
                         (
-                            "Digital modeling and machine learning preserve janggu kinematics and resonance end to end: fine-tuned MERT-v1 (95M) and MelCNN architectures transcribe piezo/accelerometer strokes (distinct from RMVPE vocal F0 models), while FAUST physical models couple 2D FDTD Digital Waveguide Meshes (DWM) to a 1D shell guide on embedded Bela boards running Pure Data or FAUST."
+                            "From MERT-v1 (95M) and MelCNN spectrogram stroke transcription to real-time FAUST FDTD Digital Waveguide Meshes—updating p(i,j,n+1) = 0.5*(p(i-1,j,n)+p(i+1,j,n)+p(i,j-1,n)+p(i,j+1,n)) - p(i,j,n-1) under CFL limits with hoop and joimjul boundary compliance—hardware iJanggu units route piezo pickups placed inside the Paulownia shell or beneath bukpyeon into Bela boards running Pure Data or FAUST."
                         ),
                     ),
                     (
-                        "Want to look into museum forensic imaging like SR-μCT and p-XRF next?",
-                        "Curious how KAIST's EBNF grammar parses Jeongganbo scores or how Bessel membrane modes work?",
-                        "Should we dive into 3D Vibrometry (SLDV) validation or forensic heritage conservation?",
+                        "Want to inspect the Jeongganbo EBNF grammar or museum forensic imaging (SR-μCT / p-XRF)?",
+                        "Curious how 3D Vibrometry (SLDV) and TMM fluid models validate the cavity waves?",
+                        "Should we explore MelCNN spectrogram vs. vocal F0CNN distinctions or museum conservation next?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -630,27 +657,27 @@ class InferenceEngine:
 
         elif intent == "ask_acoustics":
             all_construction = self.repository.get_verified_facts("construction")
-            selected_facts = [f for f in all_construction if f["id"] in {"F17", "F30", "F53", "F02", "F03", "F43"}]
+            selected_facts = [f for f in all_construction if f["id"] in {"F17", "F30", "F53", "F61", "F62", "F02", "F03", "F43"}]
             reply_text = compose_variation(
                 "rule::ask_acoustics",
                 (
                     (
-                        "Non-linear acoustics govern both the drumheads and the internal cavity:\n"
-                        "- Inharmonic Bessel modes & SLDV: Circular drumheads vibrate according to Bessel function zeros (resulting in non-integer overtones), which 3D Scanning Laser Doppler Vibrometry (SLDV) visualizes as fundamental (0,1) motion at center bokpan vs. asymmetric (1,1) and (2,1) modes when striking the byeonjuk edge.\n"
-                        "- Coupled Helmholtz / TMM cavity fluid dynamics: Transfer Matrix Modeling (TMM) treats chambers as compliances (C_a) and the jorongmok waist as acoustic inertance (L_a)—too wide causes destructive phase cancellation, too narrow isolates closed pipes.\n"
-                        "- ADSR & spatial radiation: High-density cowhide slows waves into an omnidirectional long-release bukpyeon pulse, whereas chaepyeon beams fast transient energy horizontally."
+                        "Non-linear wave and fluid acoustics shape every note on the janggu:\n"
+                        "- Wave equation & Bessel modes: Circular drumheads follow the 2D polar wave equation with c = sqrt(tau / rho_s) and Bessel functions J_m(k_mn r). Edge-striking byeonjuk suppresses the (0,1) fundamental and excites asymmetric (m >= 1) modes, while high-density cowhide keeps c_left << c_right so heads never phase-align—yielding inharmonic overtones.\n"
+                        "- 3D SLDV & TMM Helmholtz cavity: Non-contact 3D Scanning Laser Doppler Vibrometry (SLDV) reflects lasers off skins to image (1,1)/(2,1) modes and spot misaligned joigae wedges, while Transfer Matrix Modeling computes impedance Z = j*omega*rho_0*L_eff/A ([p1; V1] = T_n T_c [p3; V3]) across chambers (compliance C_a) and jorongmok (inertance L_a).\n"
+                        "- ADSR & directional radiation: Chaepyeon delivers fast Attack/Decay with near-zero Sustain beaming horizontally, whereas bukpyeon radiates omnidirectionally with a prolonged Release."
                     ),
                     (
-                        "Acousticians analyze the janggu through 3D Scanning Laser Doppler Vibrometry (SLDV) and Transfer Matrix Modeling (TMM): circular drumheads follow Bessel function zeros for an inharmonic spectrum—exciting (0,1) center resonance on bokpan vs. (1,1) and (2,1) asymmetric edge modes on byeonjuk—while the narrow jorongmok acts as a coupled Helmholtz inertance choke balancing low-frequency coupling against treble phase cancellation. In radiation and ADSR terms, chaepyeon snaps quickly along a directional horizontal beam whereas bukpyeon decays longer and spreads omnidirectionally."
+                        "Physically, the janggu links asymmetric Bessel-function membranes (c = sqrt(tau / rho_s), J_m(k_mn r), keeping c_left << c_right without phase alignment) across a coupled Helmholtz TMM neck (Z = j*omega*rho_0*L_eff/A, [p1; V1] = T_n T_c [p3; V3]). Non-contact 3D SLDV laser vibrometry captures (0,1) bokpan center fundamentals versus higher asymmetric (m >= 1) byeonjuk modes like (1,1)/(2,1) and diagnoses misaligned joigae tension—while chaepyeon snaps fast Attack/Decay horizontally and bukpyeon swells omnidirectionally over a long Release."
                     ),
                     (
-                        "Because circular drumheads obey 2D wave Bessel solutions rather than simple harmonic series, striking center (bokpan) vs. rim (byeonjuk) shifts between (0,1) fundamentals and higher asymmetric (1,1)/(2,1) modes mapped by SLDV. Inside the hourglass shell, TMM models the jorongmok choke as an acoustic inertance coupling Helmholtz-like cavities—avoiding both phase cancellation and isolated closed-pipe dullness—while disparate hide mass densities yield sharp horizontal chaepyeon transients and omnidirectional bukpyeon release."
+                        "From 2D polar wave propagation [c = sqrt(tau / rho_s)] and inharmonic Bessel functions J_m(k_mn r) (where edge strikes suppress (0,1) and lift asymmetric m >= 1 modes, with c_left << c_right preventing phase alignment) to TMM cavity inertance [Z = j*omega*rho_0*L_eff/A] verified by non-contact SLDV laser velocity scans, the drum's acoustic choke prevents phase cancellation on one hand and closed-pipe dullness on the other—yielding razor-sharp directional chaepyeon ADSR transients beside prolonged omnidirectional bukpyeon release."
                     ),
                 ),
                 (
-                    "Want to look into Paulownia wood porosity and nakdong impedance or how FAUST models these waves?",
-                    "Curious how digital waveguide meshes simulate these coupled cavities or how wedges tune them?",
-                    "Should we check out wooden wall tap-tuning, joigae pitch shifts or FDTD modeling next?",
+                    "Want to look into how FAUST models these meshes numerically, or how nakdong scorching alters Q-factor?",
+                    "Curious how Paulownia porosity contributes to boundary layer damping inside the cavity?",
+                    "Should we check out mechanical cord tuning, Paulownia anatomy or FDTD synthesis next?",
                 ),
                 session=session,
                 separator="\n\n",
@@ -659,7 +686,24 @@ class InferenceEngine:
 
         elif intent == "ask_construction":
             all_construction = self.repository.get_verified_facts("construction")
-            if "wood_anatomy" in entities:
+            if "hide_curing" in entities:
+                selected_facts = [f for f in all_construction if f["id"] in {"F60", "F02", "F43"}]
+                reply_text = compose_variation(
+                    "rule::const_hide_curing",
+                    (
+                        "Rather than using harsh chemical tanning like Western orchestral drums, Korean makers shave cowhide/deerskin (36–46 cm) and horsehide/doghide (35–45 cm) to micron tolerances, soak them to extract excess proteins and cure them naturally to align collagen fibers radially—preserving viscoelasticity under intense bamboo mallet strikes.",
+                        "Traditional Korean hide preparation avoids chemical tanning: skins are precision-shaved to micron thickness tolerances, soaked to wash out surplus proteins and naturally cured so collagen fibers orient radially, preserving elastic resilience (viscoelasticity) against high-force yeolchae and gungchae impacts.",
+                        "Unlike chemically tanned Western drumheads, traditional janggu hides stay viscoelastic through mechanical shaving to micron tolerances, soaking away spare proteins and radial collagen-fiber alignment during natural curing.",
+                    ),
+                    (
+                        "Want to compare how cowhide versus horsehide shifts membrane wave speed next?",
+                        "Curious how animal glues like sturgeon isinglass bond the wooden shell?",
+                        "Should we look at Paulownia coreana wood properties or SLDV acoustics next?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+            elif "wood_anatomy" in entities:
                 selected_facts = [f for f in all_construction if f["id"] in {"F50", "F16", "F43"}]
                 reply_text = compose_variation(
                     "rule::const_wood_anatomy",
@@ -928,13 +972,13 @@ class InferenceEngine:
                 )
                 session.set_pending_offer({"type": "court_or_folk"})
             elif "seoljanggu" in entities:
-                selected_facts = [f for f in all_cultural if f["id"] in {"F38", "F06"}]
+                selected_facts = [f for f in all_cultural if f["id"] in {"F38", "F65", "F06"}]
                 reply_text = compose_variation(
                     "rule::cult_seoljanggu",
                     (
-                        "Within civilian pungmul troupes, the seoljanggu is the lead drummer directing ensemble tempo shifts alongside spinning sangmo ribbon-hat choreography. Honam Udo virtuoso Kim Byeong-seop transformed that processional leadership into a dedicated solo art form, gaeinjanggunori.",
-                        "Acting as rhythmic conductor and featured dancer, the seoljanggu guides pacing transitions and sangmo hat spins in village pungmul bands—later elevated into intricate solo concert repertoire (gaeinjanggunori) by Honam Udo master Kim Byeong-seop.",
-                        "Leading pungmul formations on the field, the seoljanggu commands tempo changes and sangmo ribbon movements; Honam Udo master Kim Byeong-seop further spun that role into solo gaeinjanggunori performance.",
+                        "Within civilian pungmul troupes, the seoljanggu is the lead drummer directing ensemble tempo shifts alongside spinning sangmo ribbon-hat choreography. Honam Udo master Kim Byeong-seop (1921-1987) elevated that leadership into solo gaeinjanggunori performance, while in modern staged Samulnori ethnographers note women drummers adopting forceful kinetic postures ('masculinization of women drummers') to build legitimacy alongside historically male Namsadang lineages.",
+                        "Acting as rhythmic conductor and featured dancer, the seoljanggu guides pacing transitions and sangmo hat spins in village pungmul bands—turned into intricate solo repertoire (gaeinjanggunori) by Honam Udo master Kim Byeong-seop (1921-1987). Contrasting quiet court Jeongak/Aak score reading, contemporary staged Samulnori also highlights female drummers embracing aggressive Namsadang-derived kinetic movements.",
+                        "Leading pungmul formations on the field, the seoljanggu commands tempo changes and sangmo ribbon choreography; Honam Udo master Kim Byeong-seop (1921-1987) codified solo gaeinjanggunori phrasing, contrasting court Jeongak/Aak restraint while modern Samulnori stages reflect intense physical postures adopted by both men and women percussionists.",
                     ),
                     (
                         "Want to look at the five janggu strokes or the jangdan patterns they perform?",

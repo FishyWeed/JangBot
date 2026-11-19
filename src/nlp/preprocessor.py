@@ -83,12 +83,21 @@ class NLPPreprocessor:
         text = re.sub(r"\s+", " ", text).strip()
         return text
 
+    SAFE_ENGLISH_WORDS: Set[str] = {
+        "world", "could", "would", "should", "about", "where", "there", "their", "these", "those",
+        "which", "first", "other", "after", "still", "using", "sound", "right", "light", "stage",
+        "state", "court", "short", "small", "large", "heart", "black", "white", "water", "plant",
+        "plants", "metal", "music", "dance", "drums", "shell", "shells", "stick", "sticks",
+        "hands", "heads", "tones", "notes", "waves", "walls", "trees", "pores", "crack", "weigh",
+        "price", "today", "tempo", "speed", "faster", "slower", "louder", "apply", "protect",
+    }
+
     def correct_typos(self, text: str, threshold: int = 85) -> str:
-        """Correct misspelled keywords using RapidFuzz."""
+        """Correct misspelled domain keywords using RapidFuzz without mutating standard English words."""
         words = text.split()
         corrected_words = []
         for word in words:
-            if len(word) <= 3:
+            if len(word) <= 3 or word in self.vocabulary or word in self.SAFE_ENGLISH_WORDS:
                 corrected_words.append(word)
                 continue
             match = process.extractOne(

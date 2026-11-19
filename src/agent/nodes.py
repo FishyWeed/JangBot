@@ -70,6 +70,8 @@ ENTITY_INTENT_MAP: Dict[str, str] = {
     "ml_dsp": "ask_evolution",
     "conservation": "ask_evolution",
     "microtonal_tuning": "ask_cultural_significance",
+    "hide_curing": "ask_construction",
+    "ebnf_grammar": "ask_evolution",
 }
 
 DOMAIN_KEYWORDS = {
@@ -104,6 +106,8 @@ DOMAIN_KEYWORDS = {
     "melcnn", "mert", "f0cnn", "rmvpe", "fdtd", "dwm", "faust", "cfl", "bela", "accelerometer",
     "xrf", "microtomography", "photogrammetry", "peg", "duksu", "bisaek", "gangjin", "conservation",
     "440hz", "ajaeng", "piri", "microtonal", "fulcrum", "lever", "sigimsae", "gak", "jeonggan",
+    "tanning", "curing", "collagen", "viscoelasticity", "viscoelastic", "ebnf", "subjeonggan", "rubato",
+    "wave", "equation", "masculinization", "aak", "1921", "1987", "shaved", "micron",
     "favorite", "popular", "cool", "interesting", "nice", "awesome", "thanks", "both"
 }
 
@@ -139,7 +143,8 @@ FRAMING_AND_STOPWORDS = {
     "interesting", "nice", "please", "thank", "thanks", "play", "played", "playing", "practice",
     "practicing", "fast", "faster", "slow", "slower", "loud", "louder", "soft", "softer", "tempo", "speed",
     "standard", "typical", "real", "exist", "exists", "instead", "rather", "versus",
-    "apply", "applies", "biomechanically", "protect",
+    "apply", "applies", "biomechanically", "protect", "keep", "kept", "keeps",
+    "bring", "take", "taken", "hold", "behavior",
 }
 
 # Context adjectives/eras that must not create false DB hits when probing whether a specific gap topic is in janggu.db
@@ -474,6 +479,7 @@ class JangBotNodes:
 
         # Context overrides for pitch-tightening, court-vs-folk technique, acoustics, conservation and sajanggu/NGC chronology
         canon_tokens = set(canonical.split())
+        override_applied = True
         if ("gungpyeon" in entities or "chaepyeon" in entities) and (canon_tokens & {"tighten", "tight", "pitch", "tune", "tuned", "tuning"}):
             entities["joimjul"] = "joimjul"
             intent = "ask_construction"
@@ -498,8 +504,11 @@ class JangBotNodes:
         elif "ml_dsp" in entities or "conservation" in entities:
             intent = "ask_evolution"
             confidence = max(confidence, 0.85)
-        elif "wood_anatomy" in entities or "surface_finish" in entities:
+        elif "wood_anatomy" in entities or "surface_finish" in entities or "hide_curing" in entities:
             intent = "ask_construction"
+            confidence = max(confidence, 0.85)
+        elif "ebnf_grammar" in entities and "ijanggu" not in entities:
+            intent = "ask_evolution"
             confidence = max(confidence, 0.85)
         elif "microtonal_tuning" in entities:
             corrected_low = corrected.lower()
@@ -511,9 +520,11 @@ class JangBotNodes:
         elif "pansori" in entities or (canon_tokens & {"shaman", "shamanic", "shamanistic", "musok", "gut"}):
             intent = "ask_cultural_significance"
             confidence = max(confidence, 0.85)
+        else:
+            override_applied = False
 
-        # Align intent using recognized entities and active context
-        if entities and (confidence < conf_threshold or state.get("active_topic")):
+        # Align intent using recognized entities and active context when no specific override applied
+        if not override_applied and entities and (confidence < conf_threshold or state.get("active_topic")):
             for ent_key in entities:
                 if ent_key in ENTITY_INTENT_MAP:
                     mapped = ENTITY_INTENT_MAP[ent_key]
@@ -657,7 +668,7 @@ class JangBotNodes:
         corrected = self.nlp.correct_typos(resolved_query)
         canonical_for_gap, _ = self.nlp.map_synonyms(corrected)
         raw_tokens = [
-            t for t in re.findall(r"[a-zA-Z0-9\uAC00-\uD7A3]+", canonical_for_gap.lower())
+            t for t in re.findall(r"[a-zA-Z0-9\uAC00-\uD7A3μ°]+", canonical_for_gap.lower())
             if len(t) >= 3 or t.isdigit()
         ]
         topic_tokens = [t for t in raw_tokens if t not in FRAMING_AND_STOPWORDS]
@@ -671,7 +682,7 @@ class JangBotNodes:
         )
         entity_terms = " ".join(f"{k} {v}" for k, v in entities.items())
         evidence_text = f"{baseline_text} {' '.join(f['statement'] for f in eval_facts)} {intent_samples} {entity_terms}".lower()
-        evidence_words = set(re.findall(r"[a-z0-9\uAC00-\uD7A3]+", evidence_text))
+        evidence_words = set(re.findall(r"[a-z0-9\uAC00-\uD7A3μ°]+", evidence_text))
 
         uncovered = []
         for tok in topic_tokens:
@@ -692,12 +703,12 @@ class JangBotNodes:
         raw_matched = self.toolchain.search_facts_sync(" ".join(probe_terms), limit=3)
         matched_facts = []
         for f in raw_matched:
-            f_words = set(re.findall(r"[a-z0-9\uAC00-\uD7A3]+", f["statement"].lower()))
+            f_words = set(re.findall(r"[a-z0-9\uAC00-\uD7A3μ°]+", f["statement"].lower()))
             if any(self._term_in_word_set(t, f_words) for t in probe_terms):
                 matched_facts.append(f)
 
         matched_text = " ".join(f["statement"].lower() for f in matched_facts)
-        matched_words = set(re.findall(r"[a-z0-9\uAC00-\uD7A3]+", matched_text))
+        matched_words = set(re.findall(r"[a-z0-9\uAC00-\uD7A3μ°]+", matched_text))
         probe_missing = [t for t in probe_terms if not self._term_in_word_set(t, matched_words)]
         matched_probe_count = len(probe_terms) - len(probe_missing)
 
@@ -705,6 +716,7 @@ class JangBotNodes:
             not matched_facts
             or matched_probe_count == 0
             or any(t in UNVERIFIED_GAP_TERMS for t in probe_missing)
+            or (len(probe_missing) >= 4 and matched_probe_count <= 1)
         ):
             missing_str = ", ".join(uncovered[:3])
             gap_fallback = compose_variation(
@@ -734,10 +746,11 @@ class JangBotNodes:
 
         still_missing = [t for t in uncovered if not self._term_in_word_set(t, matched_words)]
 
-        # Ensure general documented contexts (F06) accompany partial matches
+        # Append F06 role context only when partial hits relate to cultural/performance roles
         all_by_id = {f["id"]: f for f in self.repository.get_verified_facts()}
         relevant_facts = list(matched_facts)
-        if "F06" in all_by_id and all(f["id"] != "F06" for f in relevant_facts):
+        wants_f06 = any(f.get("category") == "cultural_use" for f in matched_facts)
+        if wants_f06 and "F06" in all_by_id and all(f["id"] != "F06" for f in relevant_facts):
             relevant_facts.append(all_by_id["F06"])
 
         citations: List[Dict[str, Any]] = []
@@ -748,7 +761,7 @@ class JangBotNodes:
                 citations.append(rec)
 
         fact_summaries = " ".join(f["statement"] for f in matched_facts)
-        documented_roles = all_by_id["F06"]["statement"] if "F06" in all_by_id else ""
+        documented_roles = all_by_id["F06"]["statement"] if wants_f06 and "F06" in all_by_id else ""
         extra_role_line = f"- {documented_roles}\n\n" if documented_roles and "F06" not in {f["id"] for f in matched_facts} else "\n"
 
         if still_missing:
@@ -906,7 +919,11 @@ class JangBotNodes:
 
         # Handle tempo/speed follow-up on a specific jangdan cleanly
         resolved_low = (state.get("resolved_query") or "").lower()
-        tempo_note = self._tempo_guidance_note(resolved_low, session=session_proxy)
+        tempo_note = self._tempo_guidance_note(
+            resolved_low,
+            session=session_proxy,
+            intent=state.get("intent"),
+        )
 
         # Synthesize with LLM whenever configured and verified facts are attached (including follow-ups!)
         if self.llm.is_available and state.get("retrieved_facts"):
@@ -961,9 +978,18 @@ class JangBotNodes:
         return baseline
 
     @staticmethod
-    def _tempo_guidance_note(resolved_low: str, session: Optional[SessionMemory] = None) -> str:
+    def _tempo_guidance_note(
+        resolved_low: str,
+        session: Optional[SessionMemory] = None,
+        intent: Optional[str] = None,
+    ) -> str:
         """Provide varied, grounded tempo progression advice when user asks to play faster."""
-        if not any(w in resolved_low.split() for w in ["faster", "speed", "tempo"]):
+        if intent not in {"ask_playing_technique", "ask_cultural_significance", "ask_difficulty", None}:
+            return ""
+        if any(p in resolved_low for p in ("wave speed", "wave propagation", "rho_s", "equation", "formula")):
+            return ""
+        words = re.findall(r"[a-z]+", resolved_low)
+        if not any(w in words for w in ("faster", "speed", "tempo")):
             return ""
         if "gutgeori" in resolved_low:
             return pick_variation(

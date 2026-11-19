@@ -256,6 +256,11 @@ synonyms:
     - "adsr"
     - "omnidirectional"
     - "phase cancellation"
+    - "wave speed"
+    - "wave equation"
+    - "phase-alignment"
+    - "phase-align"
+    - "phase align"
 
   ml_dsp:
     - "melcnn"
@@ -293,3 +298,22 @@ synonyms:
     - "microtonal"
     - "class 3 lever"
     - "fulcrum"
+
+  hide_curing:
+    - "chemical tanning"
+    - "viscoelasticity"
+    - "viscoelastic"
+    - "collagen fibers"
+    - "collagen"
+    - "micron tolerances"
+    - "tanning"
+    - "shaved"
+
+  ebnf_grammar:
+    - "subjeonggan"
+    - "rubato"
+    - "ebnf"
+    - "formal grammar"
+    - "gak"
+    - "onset smear"
+    - "resonance peak"

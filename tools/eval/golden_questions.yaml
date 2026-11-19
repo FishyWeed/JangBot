@@ -195,6 +195,21 @@ categories:
     - query: "Why isn't the janggu tuned to A=440Hz equal temperament, and how is Jeongganbo read?"
       expected_status: "answered"
       must_contain_any: ["440hz", "ajaeng", "piri", "top-to-bottom"]
+    - query: "How are animal hides shaved and naturally cured without chemical tanning?"
+      expected_status: "answered"
+      must_contain_any: ["collagen", "viscoelasticity", "chemical tanning"]
+    - query: "What is the wave speed formula and phase-alignment behavior across both membranes?"
+      expected_status: "answered"
+      must_contain_any: ["sqrt", "rho_s", "phase"]
+    - query: "What does the Jeongganbo EBNF grammar look like for SubJeonggan swing?"
+      expected_status: "answered"
+      must_contain_any: ["subjeonggan", "gak", "rubato"]
+    - query: "How does the 2D FDTD pressure equation update nodes and where are iJanggu piezo mics placed?"
+      expected_status: "answered"
+      must_contain_any: ["0.5*", "bukpyeon", "paulownia shell", "fdtd"]
+    - query: "Who was Kim Byeong-seop (1921-1987) and what gender shift occurred in Samulnori?"
+      expected_status: "answered"
+      must_contain_any: ["1921", "masculinization", "gaeinjanggunori"]
 
   technique_and_rhythms:
     - query: "Contrast the bokpan and byeonjuk strike zones in court vs folk music."
