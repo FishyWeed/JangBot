@@ -44,10 +44,12 @@
 		hasError ? 'is-error' : thinking ? 'is-thinking' : speaking ? 'is-speaking' : 'is-idle'
 	);
 
-	// Floating draggable coordinates (null = default anchored position)
+	// Autonomous floating + draggable position
 	let pos = $state<{ x: number; y: number } | null>(null);
+	let tilt = $state(0);
 	let dragging = $state(false);
 	let dragOffset = { x: 0, y: 0 };
+	let pauseRoamUntil = 0;
 	let danbiEl: HTMLElement | undefined = $state();
 
 	// Live SVG speech tether from Danbi to the latest assistant bubble
@@ -57,6 +59,63 @@
 		dots: Array<{ cx: number; cy: number; r: number }>;
 		visible: boolean;
 	}>({ path: '', tailPath: '', dots: [], visible: false });
+
+	function getBounds() {
+		const w = danbiEl?.offsetWidth || 240;
+		const h = danbiEl?.offsetHeight || 260;
+		const sidebar = document.querySelector('.jb-shell:not(.is-collapsed) .jb-sidebar');
+		const isDesktop = window.innerWidth >= 1024;
+		const minX = isDesktop && sidebar ? Math.min(304, window.innerWidth * 0.3) : 10;
+		const maxX = Math.max(minX + 10, window.innerWidth - w - 18);
+		const minY = 74;
+		const maxY = Math.max(minY + 10, window.innerHeight - h - 102);
+		return { minX, maxX, minY, maxY, w, h };
+	}
+
+	function clampPos(x: number, y: number) {
+		const b = getBounds();
+		return {
+			x: Math.max(b.minX, Math.min(b.maxX, x)),
+			y: Math.max(b.minY, Math.min(b.maxY, y))
+		};
+	}
+
+	function pickRoamWaypoint(): { x: number; y: number } {
+		const b = getBounds();
+		const bubbles = document.querySelectorAll('.jb-bubble--assistant');
+		const latest = bubbles.length ? (bubbles[bubbles.length - 1] as HTMLElement) : null;
+
+		// When speaking or thinking, gently drift near the latest assistant bubble on the open side
+		if ((speaking || thinking) && latest) {
+			const r = latest.getBoundingClientRect();
+			const spaceRight = b.maxX - (r.right + 20);
+			const spaceLeft = r.left - 20 - b.minX;
+			const targetY = r.top + Math.min(r.height * 0.35, 70) - b.h * 0.35;
+
+			if (spaceRight > 40) {
+				return clampPos(r.right + 28 + Math.random() * Math.min(90, spaceRight), targetY);
+			}
+			if (spaceLeft > 40) {
+				return clampPos(r.left - b.w - 24 - Math.random() * Math.min(60, spaceLeft), targetY);
+			}
+		}
+
+		// Calmly roam around the open chat canvas (favoring spacious edges on desktop)
+		const spanX = b.maxX - b.minX;
+		const spanY = b.maxY - b.minY;
+		let tx: number;
+		if (window.innerWidth >= 1024 && spanX > 260) {
+			// 70% right side (open area), 30% left/mid drift for lively presence
+			const pickRight = Math.random() < 0.7;
+			tx = pickRight
+				? b.minX + spanX * (0.68 + Math.random() * 0.32)
+				: b.minX + spanX * (Math.random() * 0.25);
+		} else {
+			tx = b.minX + Math.random() * spanX;
+		}
+		const ty = b.minY + Math.random() * spanY;
+		return clampPos(tx, ty);
+	}
 
 	function computeTether() {
 		if (typeof window === 'undefined' || !danbiEl) {
@@ -74,7 +133,6 @@
 		const b = target.getBoundingClientRect();
 		const d = danbiEl.getBoundingClientRect();
 
-		// Hide tether if target bubble is scrolled completely out of the visible chat window
 		if (b.bottom < 70 || b.top > window.innerHeight - 60 || d.width === 0) {
 			tether = { path: '', tailPath: '', dots: [], visible: false };
 			return;
@@ -82,35 +140,32 @@
 
 		const dCx = d.left + d.width * 0.5;
 		const dCy = d.top + d.height * 0.44;
-		const bCx = b.left + b.width * 0.5;
-		const bCy = Math.max(78, Math.min(window.innerHeight - 90, b.top + Math.min(b.height * 0.5, 90)));
+		const bCy = Math.max(
+			78,
+			Math.min(window.innerHeight - 96, b.top + Math.min(b.height * 0.5, 90))
+		);
 
-		// Choose the closest edge on the bubble toward Danbi
 		let endX: number;
 		let endY: number;
 		let startX: number;
 		let startY: number;
 
 		if (dCx > b.right + 16) {
-			// Danbi is to the right of the bubble
 			endX = b.right + 2;
 			endY = bCy;
 			startX = d.left + d.width * 0.16;
 			startY = dCy;
 		} else if (dCx < b.left - 16) {
-			// Danbi is to the left of the bubble
 			endX = b.left - 2;
 			endY = bCy;
 			startX = d.right - d.width * 0.16;
 			startY = dCy;
 		} else if (dCy > b.bottom) {
-			// Danbi is below the bubble
 			endX = Math.max(b.left + 24, Math.min(b.right - 24, dCx));
 			endY = b.bottom + 2;
 			startX = dCx;
 			startY = d.top + d.height * 0.14;
 		} else {
-			// Danbi is above or overlapping the bubble
 			endX = Math.max(b.left + 24, Math.min(b.right - 24, dCx));
 			endY = b.top - 2;
 			startX = dCx;
@@ -125,11 +180,9 @@
 			return;
 		}
 
-		// Graceful quadratic arc rising slightly like a floating voice ribbon
 		const midX = (startX + endX) / 2;
 		const midY = (startY + endY) / 2 - Math.min(36, dist * 0.14);
 
-		// Compute 3 speech bubbles/beads along the quadratic curve from Danbi -> bubble
 		const qPoint = (t: number) => {
 			const mt = 1 - t;
 			return {
@@ -142,7 +195,6 @@
 		const p2 = qPoint(0.5);
 		const p3 = qPoint(0.78);
 
-		// Small pointer triangle anchored to the bubble edge facing Danbi
 		const ang = Math.atan2(startY - endY, startX - endX);
 		const tipLen = 13;
 		const baseSpread = 0.45;
@@ -169,56 +221,124 @@
 		dragging = true;
 		dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
 		pos = { x: rect.left, y: rect.top };
+		tilt = 0;
 		danbiEl.setPointerCapture(e.pointerId);
 	}
 
 	function onPointerMove(e: PointerEvent) {
 		if (!dragging || !danbiEl) return;
-		const w = danbiEl.offsetWidth;
-		const h = danbiEl.offsetHeight;
-		const nextX = Math.max(8, Math.min(window.innerWidth - w - 8, e.clientX - dragOffset.x));
-		const nextY = Math.max(68, Math.min(window.innerHeight - h - 12, e.clientY - dragOffset.y));
-		pos = { x: nextX, y: nextY };
+		const next = clampPos(e.clientX - dragOffset.x, e.clientY - dragOffset.y);
+		pos = next;
 		computeTether();
 	}
 
 	function onPointerUp(e: PointerEvent) {
 		if (!dragging || !danbiEl) return;
 		dragging = false;
+		pauseRoamUntil = performance.now() + 3500;
 		try {
 			danbiEl.releasePointerCapture(e.pointerId);
 		} catch {}
 		computeTether();
 	}
 
+	// Re-pick target gently whenever Danbi starts speaking or thinking
+	let forceRetarget = false;
 	$effect(() => {
 		messageCount;
 		pose;
 		speaking;
 		thinking;
+		forceRetarget = true;
 		tick().then(() => requestAnimationFrame(computeTether));
 	});
 
 	onMount(() => {
+		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const initB = getBounds();
+		let curX = initB.maxX - 12;
+		let curY = initB.maxY - 10;
+		let velX = 0;
+		let velY = 0;
+		let target = clampPos(curX, curY);
+		let nextPickAt = performance.now() + 1800;
+		pos = { x: curX, y: curY };
+
 		let raf = 0;
-		const schedule = () => {
-			cancelAnimationFrame(raf);
-			raf = requestAnimationFrame(computeTether);
+		let lastT = performance.now();
+
+		const step = (now: number) => {
+			const dt = Math.min(0.05, (now - lastT) / 1000);
+			lastT = now;
+
+			if (!reducedMotion && !dragging) {
+				if (pos) {
+					curX = pos.x;
+					curY = pos.y;
+				}
+
+				if (forceRetarget && now >= pauseRoamUntil) {
+					forceRetarget = false;
+					target = pickRoamWaypoint();
+					nextPickAt = now + (speaking || thinking ? 3400 : 5200);
+				} else if (now >= nextPickAt && now >= pauseRoamUntil) {
+					target = pickRoamWaypoint();
+					nextPickAt = now + 4500 + Math.random() * 3200;
+				}
+
+				// Soft spring-like drift toward waypoint + gentle sinusoidal float bob
+				const bobY = Math.sin(now * 0.0018) * 10;
+				const bobX = Math.cos(now * 0.0011) * 5;
+				const dx = target.x + bobX - curX;
+				const dy = target.y + bobY - curY;
+
+				const stiffness = speaking || thinking ? 2.1 : 1.15;
+				const damping = 0.86;
+				velX = (velX + dx * stiffness * dt) * Math.pow(damping, dt * 60);
+				velY = (velY + dy * stiffness * dt) * Math.pow(damping, dt * 60);
+
+				// Cap max cruise speed so Danbi floats serenely
+				const speed = Math.hypot(velX, velY);
+				const maxSpeed = speaking || thinking ? 160 : 95;
+				if (speed > maxSpeed) {
+					velX = (velX / speed) * maxSpeed;
+					velY = (velY / speed) * maxSpeed;
+				}
+
+				const clamped = clampPos(curX + velX * dt, curY + velY * dt);
+				curX = clamped.x;
+				curY = clamped.y;
+				pos = { x: curX, y: curY };
+				tilt = Math.max(-5, Math.min(5, velX * 0.045));
+			} else if (dragging && pos) {
+				curX = pos.x;
+				curY = pos.y;
+				velX = 0;
+				velY = 0;
+				target = { x: curX, y: curY };
+			}
+
+			computeTether();
+			raf = requestAnimationFrame(step);
 		};
 
-		const scroller = document.querySelector('.jb-shell__main');
-		scroller?.addEventListener('scroll', schedule, { passive: true });
-		window.addEventListener('resize', schedule, { passive: true });
-		const mo = new MutationObserver(schedule);
-		if (scroller) mo.observe(scroller, { childList: true, subtree: true, attributes: true });
+		const onResize = () => {
+			if (pos) {
+				const c = clampPos(pos.x, pos.y);
+				curX = c.x;
+				curY = c.y;
+				pos = c;
+				target = clampPos(target.x, target.y);
+			}
+			computeTether();
+		};
 
-		schedule();
+		window.addEventListener('resize', onResize, { passive: true });
+		raf = requestAnimationFrame(step);
 
 		return () => {
 			cancelAnimationFrame(raf);
-			scroller?.removeEventListener('scroll', schedule);
-			window.removeEventListener('resize', schedule);
-			mo.disconnect();
+			window.removeEventListener('resize', onResize);
 		};
 	});
 </script>
@@ -240,15 +360,14 @@
 	</svg>
 {/if}
 
-<!-- Massive always-on floating Danbi -->
+<!-- Massive always-on autonomously floating & draggable Danbi -->
 <div
 	bind:this={danbiEl}
 	class="jb-danbi-float {moodClass}"
 	class:is-dragging={dragging}
-	style:left={pos ? `${pos.x}px` : undefined}
-	style:top={pos ? `${pos.y}px` : undefined}
-	style:right={pos ? 'auto' : undefined}
-	style:bottom={pos ? 'auto' : undefined}
+	style:transform={pos
+		? `translate3d(${pos.x.toFixed(1)}px, ${pos.y.toFixed(1)}px, 0) rotate(${tilt.toFixed(2)}deg)`
+		: undefined}
 	role="img"
 	aria-label="Danbi ({meta.title}) — drag to move"
 	title="Drag Danbi anywhere on screen"
@@ -327,8 +446,8 @@
 
 	.jb-danbi-float {
 		position: fixed;
-		right: clamp(20px, 3vw, 48px);
-		bottom: 108px;
+		left: 0;
+		top: 0;
 		z-index: 8;
 		width: clamp(230px, 23vw, 320px);
 		display: flex;
@@ -338,6 +457,7 @@
 		cursor: grab;
 		user-select: none;
 		touch-action: none;
+		will-change: transform;
 		filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.42));
 		transition: filter 0.25s ease;
 	}
@@ -489,16 +609,12 @@
 	@media (max-width: 1023px) {
 		.jb-danbi-float {
 			width: 175px;
-			right: 16px;
-			bottom: 106px;
 		}
 	}
 
 	@media (max-width: 767px) {
 		.jb-danbi-float {
 			width: 126px;
-			right: 10px;
-			bottom: 108px;
 		}
 
 		.jb-float-pill {
