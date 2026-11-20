@@ -19,6 +19,12 @@ synonyms:
     - "bass head"
     - "bass side"
     - "cowhide side"
+    - "cowhide"
+    - "cow skin"
+    - "cow hide"
+    - "deerskin"
+    - "deer skin"
+    - "deer hide"
     - "북편"
     - "궁편"
 
@@ -30,6 +36,13 @@ synonyms:
     - "treble head"
     - "treble side"
     - "horsehide side"
+    - "horsehide"
+    - "horse skin"
+    - "horse hide"
+    - "doghide"
+    - "dogskin"
+    - "dog skin"
+    - "dog hide"
     - "채편"
 
   yeolchae:
@@ -111,7 +124,10 @@ synonyms:
   chuimsae:
     - "chuimsae"
     - "vocal cries"
+    - "vocal shouts"
     - "cries of encouragement"
+    - "shouts"
+    - "shout"
     - "eolssigu"
     - "jota"
     - "추임새"
@@ -153,6 +169,9 @@ synonyms:
     - "yonggo"
     - "military band"
     - "war drum"
+    - "roka"
+    - "army band"
+    - "army bands"
     - "대취타"
     - "용고"
 
@@ -202,6 +221,9 @@ synonyms:
     - "celadon janggu"
     - "ceramic janggu"
     - "ceramic body"
+    - "celadon"
+    - "ceramic"
+    - "사장구"
 
   hornbostel:
     - "hornbostel-sachs"
@@ -278,6 +300,10 @@ synonyms:
     - "accelerometer"
 
   conservation:
+    - "conservation"
+    - "conservator"
+    - "museum conservation"
+    - "restoration"
     - "sr-uct"
     - "microtomography"
     - "ct scan"
@@ -307,6 +333,8 @@ synonyms:
     - "collagen"
     - "micron tolerances"
     - "tanning"
+    - "tanned"
+    - "curing"
     - "shaved"
 
   ebnf_grammar:

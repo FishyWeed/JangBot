@@ -7,8 +7,8 @@ from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple
 
 _LOCK = Lock()
 _GLOBAL_CURSOR: Dict[str, int] = {}
-_GLOBAL_RECENT_REPLIES: Deque[str] = deque(maxlen=80)
-_GLOBAL_RECENT_OPENERS: Deque[str] = deque(maxlen=80)
+_GLOBAL_RECENT_REPLIES: Deque[str] = deque(maxlen=200)
+_GLOBAL_RECENT_OPENERS: Deque[str] = deque(maxlen=200)
 
 # Stock clichés Danbi (both rule-based and LLM-synthesized) must never output
 BANNED_PHRASES: Tuple[str, ...] = (
@@ -20,15 +20,18 @@ BANNED_PHRASES: Tuple[str, ...] = (
     "crafted with remarkable care",
     "delightfully tactile",
     "universally regarded",
+    "major milestones mark",
+    "what is verified in my records",
+    "documented sources establish",
 )
 
 GREETING_VARIANTS: Tuple[str, ...] = (
-    "Hi, I'm Danbi. What aspect of the Korean janggu sparks your curiosity today?",
-    "Hi, I'm Danbi! Good to meet you—feel free to ask about janggu rhythms, craftsmanship or history.",
-    "Hi, I'm Danbi. How is your day going, and what would you like to explore about the janggu?",
-    "Hi, I'm Danbi! Whether you want to unpack court techniques, folk beats or acoustics, I am ready when you are.",
-    "Hi, I'm Danbi. Are you practicing the janggu yourself, or exploring Korean percussion history today?",
-    "Hi, I'm Danbi! Ask away about the drum's construction, stroke taxonomy, origins or jangdan cycles.",
+    "Hi, I'm Danbi. Pull up a seat—which story or tradition behind the Korean janggu would you like to hear today?",
+    "Hi, I'm Danbi! Good to meet you—ask me about the drum's history, craft or rhythms and I'll tell you how it all unfolded.",
+    "Hi, I'm Danbi. How is your day going, and what part of the janggu's story can we explore together?",
+    "Hi, I'm Danbi! Whether it is palace ceremonies, village harvest beats or how woodcarvers tune the shell, I always love sharing the story behind the sound.",
+    "Hi, I'm Danbi. Are you practicing the janggu yourself, or looking to trace Korean percussion across history?",
+    "Hi, I'm Danbi! Ask away about the drum's origins, strokes, craftsmanship or jangdan cycles.",
 )
 
 
@@ -76,8 +79,8 @@ def remember_reply(reply: str, session: Any = None) -> None:
     if session is not None and hasattr(session, "recent_replies"):
         if not session.recent_replies or _norm(session.recent_replies[-1]) != _norm(clean):
             session.recent_replies.append(clean)
-            if len(session.recent_replies) > 30:
-                del session.recent_replies[:-30]
+            if len(session.recent_replies) > 120:
+                del session.recent_replies[:-120]
 
 
 def pick_variation(
@@ -119,12 +122,11 @@ def pick_variation(
                     chosen_idx = idx
                     break
 
-        needs_reframe = False
         if chosen_idx is None:
             chosen_idx = start_idx
-            needs_reframe = _norm(variants[chosen_idx]) in seen_full
 
         chosen = variants[chosen_idx]
+        needs_reframe = (_norm(chosen) in seen_full) or (extract_opener(chosen) in seen_openers)
         if needs_reframe and reframe_prefixes:
             prefix_idx = _GLOBAL_CURSOR.get(f"{key}::reframe", 0) % len(reframe_prefixes)
             _GLOBAL_CURSOR[f"{key}::reframe"] = prefix_idx + 1
@@ -162,6 +164,9 @@ def compose_variation(
         "Coming back to that point from another angle:",
         "Putting the same verified details a bit differently:",
         "Here is another way to frame that:",
+        "Stepping back into that chapter for a closer look:",
+        "Looking at the same tradition through a slightly different lens:",
+        "To revisit that piece of the janggu's story:",
     )
     return pick_variation(
         key,

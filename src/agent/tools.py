@@ -6,6 +6,7 @@ import re
 from typing import Any, Dict, List
 from langchain_core.tools import tool
 from src.knowledge.repository import KnowledgeRepository
+from src.knowledge.semantic_network import SemanticNetwork
 from src.engine.inference import InferenceEngine
 from src.engine.explainer import Explainer
 from src.memory.session import SessionMemory
@@ -14,8 +15,16 @@ from src.memory.session import SessionMemory
 class JangguToolchain:
     """Factory binding verified read-only knowledge tools to a repository instance."""
 
+    COMPOUND_HIDE_PREFIXES = {
+        "dog": ("doghide", "dogskin"),
+        "horse": ("horsehide", "horseskin"),
+        "cow": ("cowhide", "cowskin"),
+        "deer": ("deerskin", "deerhide"),
+    }
+
     def __init__(self, repository: KnowledgeRepository):
         self.repository = repository
+        self.semantic_network = SemanticNetwork(repository)
         self.engine = InferenceEngine(repository)
         self.explainer = Explainer(repository)
         self.tools = self._build_tools()
@@ -50,6 +59,8 @@ class JangguToolchain:
 
         def _matches_word_set(tok: str, words: set) -> bool:
             if tok in words or f"{tok}s" in words:
+                return True
+            if tok in self.COMPOUND_HIDE_PREFIXES and any(alias in words for alias in self.COMPOUND_HIDE_PREFIXES[tok]):
                 return True
             if len(tok) >= 4:
                 stem = self._stem(tok)
@@ -124,6 +135,38 @@ class JangguToolchain:
             "citations": citations,
         }
 
+    def query_graph_path_sync(
+        self,
+        source: str,
+        target: str,
+        max_hops: int = 4,
+        directed: bool = False,
+    ) -> Dict[str, Any]:
+        """Traverse verified semantic relations to find the shortest cited path between two concepts."""
+        return self.semantic_network.find_shortest_path(source, target, max_hops=max_hops, directed=directed)
+
+    def get_graph_neighbors_sync(
+        self,
+        concept: str,
+        direction: str = "both",
+        predicate: str | None = None,
+    ) -> List[Dict[str, Any]]:
+        """Fetch incoming and outgoing verified semantic relations for a concept."""
+        return self.semantic_network.get_neighbors(concept, direction=direction, predicate=predicate)
+
+    def answer_relational_query_sync(self, query: str) -> Dict[str, Any] | None:
+        """Attempt multi-hop verified relational reasoning over the semantic network."""
+        return self.semantic_network.answer_relational_query(query)
+
+    def suggest_graph_followups_sync(
+        self,
+        concept_ids: List[str],
+        exclude_ids: set[str] | None = None,
+        limit: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Suggest neighboring verified concepts for dynamic conversational follow-ups."""
+        return self.semantic_network.suggest_followup_concepts(concept_ids, exclude_ids=exclude_ids, limit=limit)
+
     def _build_tools(self) -> List[Any]:
         """Build LangChain @tool wrappers for graph inspection and agent invocation."""
         repo = self.repository
@@ -147,4 +190,22 @@ class JangguToolchain:
             payload = toolchain.explain_sources_sync(fact_ids)
             return json.dumps(payload, ensure_ascii=False)
 
-        return [lookup_facts_by_category, search_janggu_facts, get_fact_citations]
+        @tool("query_semantic_neighbors")
+        def query_semantic_neighbors(concept: str) -> str:
+            """Inspect verified incoming and outgoing semantic network relations for a janggu concept."""
+            rows = toolchain.get_graph_neighbors_sync(concept)
+            return json.dumps(rows, ensure_ascii=False)
+
+        @tool("find_semantic_path")
+        def find_semantic_path(source_concept: str, target_concept: str) -> str:
+            """Find the shortest verified multi-hop path and supporting citations connecting two janggu concepts."""
+            payload = toolchain.query_graph_path_sync(source_concept, target_concept, max_hops=5)
+            return json.dumps(payload, ensure_ascii=False)
+
+        return [
+            lookup_facts_by_category,
+            search_janggu_facts,
+            get_fact_citations,
+            query_semantic_neighbors,
+            find_semantic_path,
+        ]

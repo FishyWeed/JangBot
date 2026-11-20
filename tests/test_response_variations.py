@@ -82,3 +82,24 @@ def test_intra_session_repeated_question_and_source_citations_vary():
             assert all("Hi, I'm Danbi" in g for g in (g1, g2, g3))
         finally:
             dm.close()
+
+
+def test_storyteller_persona_avoids_dry_bullet_timelines():
+    """Chronology and overview replies should weave facts as narrative stories rather than bullet lists."""
+    with tempfile.TemporaryDirectory() as tmp:
+        dm = _isolated_dm(Path(tmp))
+        try:
+            for idx, q in enumerate([
+                "Give me a timeline of the janggu.",
+                "What are the historical dates in Goryeo and Joseon history?",
+                "Tell me the chronological history of the drum.",
+            ]):
+                res = dm.process_message(f"story_chron_{idx}", q, user_id=f"u_story_{idx}")
+                reply = res["reply"]
+                assert res["status"] == "answered"
+                assert "- 1076 AD:" not in reply
+                assert "- 1114 AD:" not in reply
+                assert "\n- " not in reply
+                assert "1076" in reply and "1493" in reply and "2014" in reply
+        finally:
+            dm.close()

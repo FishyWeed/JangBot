@@ -373,6 +373,48 @@ def get_citations(
     return {"citations": _collect_citations(dm.repository, ids)}
 
 
+@app.get("/api/graph")
+def get_semantic_graph(
+    node_type: Optional[str] = Query(default=None, description="Optional node_type filter"),
+    predicate: Optional[str] = Query(default=None, description="Optional predicate filter"),
+    category: Optional[str] = Query(default=None, description="Optional category filter"),
+) -> Dict[str, Any]:
+    """Return the verified semantic network nodes, directed edges and summary counts."""
+    dm = get_dialogue_manager()
+    return dm.agent.toolchain.semantic_network.get_graph_overview(
+        node_type=node_type,
+        predicate=predicate,
+        category=category,
+    )
+
+
+@app.get("/api/graph/node/{concept}")
+def get_semantic_graph_node(concept: str) -> Dict[str, Any]:
+    """Return a verified concept node, its incoming/outgoing cited relations and neighbor follow-ups."""
+    dm = get_dialogue_manager()
+    details = dm.agent.toolchain.semantic_network.get_node_details(concept)
+    if details is None:
+        raise HTTPException(status_code=404, detail=f"Concept '{concept}' not found in semantic network.")
+    return details
+
+
+@app.get("/api/graph/path")
+def get_semantic_graph_path(
+    from_concept: str = Query(..., alias="from", min_length=1, description="Source concept ID or alias"),
+    to_concept: str = Query(..., alias="to", min_length=1, description="Target concept ID or alias"),
+    max_hops: int = Query(default=4, ge=1, le=8),
+    directed: bool = Query(default=False),
+) -> Dict[str, Any]:
+    """Find the shortest verified multi-hop path and supporting citations between two concepts."""
+    dm = get_dialogue_manager()
+    sn = dm.agent.toolchain.semantic_network
+    if sn.resolve_concept(from_concept) is None:
+        raise HTTPException(status_code=404, detail=f"Source concept '{from_concept}' not found.")
+    if sn.resolve_concept(to_concept) is None:
+        raise HTTPException(status_code=404, detail=f"Target concept '{to_concept}' not found.")
+    return sn.find_shortest_path(from_concept, to_concept, max_hops=max_hops, directed=directed)
+
+
 @app.get("/{full_path:path}")
 def serve_frontend(full_path: str):
     """Serve the built SvelteKit static app when available."""

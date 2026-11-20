@@ -43,6 +43,15 @@ def run_system_check() -> bool:
         return False
     print("[OK] All verified facts contain source citations.")
 
+    sem_audit = repo.validate_semantic_network()
+    if not sem_audit["ok"]:
+        print(f"[FAIL] Semantic network validation failed: {sem_audit['invalid_edges'][:3]}")
+        return False
+    print(
+        f"[OK] Semantic network: {sem_audit['node_count']} concept nodes, "
+        f"{sem_audit['edge_count']} verified cited edges (0 unverified)."
+    )
+
     print("All system checks passed successfully.")
     return True
 

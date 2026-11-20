@@ -36,6 +36,8 @@ class InferenceEngine:
 
         if intent == "conversational_acknowledgment":
             selected_facts = [f for f in self.repository.get_verified_facts() if f["id"] in session.last_fact_ids]
+            if not selected_facts:
+                selected_facts = [f for f in self.repository.get_verified_facts() if f["id"] == "F06"]
             reply_text = compose_variation(
                 "rule::acknowledgment",
                 (
@@ -125,8 +127,14 @@ class InferenceEngine:
             )
 
         elif "jangdan" in entities or (intent == "ask_cultural_significance" and any(k in entities for k in ["chuimsae", "jangdan"])):
+            cultural_facts = self.repository.get_verified_facts("cultural_use")
+            named_jangdans = [
+                k for k in ("jinyangjo", "jungmori", "jungjungmori", "jajinmori", "hwimori", "gutgeori", "eonmori")
+                if k in entities
+            ]
+            single_jangdan = named_jangdans[0] if len(named_jangdans) == 1 else None
             if "chuimsae" in entities:
-                selected_facts = [f for f in self.repository.get_verified_facts("cultural_use") if f["id"] == "F28"]
+                selected_facts = [f for f in cultural_facts if f["id"] == "F28"]
                 reply_text = compose_variation(
                     "rule::chuimsae",
                     (
@@ -142,35 +150,139 @@ class InferenceEngine:
                     session=session,
                     separator=" ",
                 )
+            elif single_jangdan == "jinyangjo":
+                selected_facts = [f for f in cultural_facts if f["id"] == "F21"]
+                reply_text = compose_variation(
+                    "rule::jangdan_jinyangjo",
+                    (
+                        "Slow down your breathing and step into Jinyangjo—the widest, most patient cycle in traditional Korean drumming. Stretching across 24 slow beats, it carries deep sorrow, longing and quiet aristocratic dignity, giving Pansori singers and Sanjo soloists room to bend a single note across a whole span of memory.",
+                        "At the calmest, heaviest end of the jangdan spectrum sits 24-beat Jinyangjo. In tragic Pansori scenes and stately Sanjo openings, every strike leaves generous space in the air so grief and noble restraint can settle over the room.",
+                    ),
+                    (
+                        "Want to pick up the pace into walking 12-beat Jungmori or swinging Gutgeori next?",
+                        "Should we leap all the way to the opposite extreme—blazing 4-beat Hwimori?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "slow_or_fast_rhythms", "slow_done": True})
+            elif single_jangdan == "jungmori":
+                selected_facts = [f for f in cultural_facts if f["id"] == "F22"]
+                reply_text = compose_variation(
+                    "rule::jangdan_jungmori",
+                    (
+                        "Jungmori walks forward like a storyteller striding down a quiet country road. Moving in a steady, lyrical 12-beat pulse, it anchors narrative Pansori stretches and gives beginners enough breathing room to land a clean Deong downbeat without rushing either hand.",
+                        "Set at a moderate 12-beat walking pace, Jungmori balances calm narrative flow with clear structural downbeats—making it both a pillar of lyrical storytelling and the classic starting cycle for new janggu students.",
+                    ),
+                    (
+                        "Want to hear how Jungjungmori brightens that same 12-beat road, or jump into Gutgeori's dance swing?",
+                        "Should we look at the five strokes that build Jungmori, or step up into faster folk cycles?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "beginner_rhythms"})
+            elif single_jangdan == "jungjungmori":
+                selected_facts = [f for f in cultural_facts if f["id"] == "F23"]
+                reply_text = compose_variation(
+                    "rule::jangdan_jungjungmori",
+                    (
+                        "Pick up the lantern and lighten your step—Jungjungmori takes a 12-beat pulse and infuses it with playful, graceful bounce. Performers reach for it whenever a tale turns lively, witty or celebratory, letting dance-like phrasing lift the entire room.",
+                        "Brighter and livelier than walking Jungmori, 12-beat Jungjungmori carries cheerful momentum tailored for spirited dance passages and lighthearted storytelling scenes.",
+                    ),
+                    (
+                        "Want to compare that cheerful bounce with Gutgeori's village dance swing or crooked 10-beat Eonmori?",
+                        "Should we jump into shamanic Gutgeori or urgent battle-paced Jajinmori next?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "slow_or_fast_rhythms"})
+            elif single_jangdan == "gutgeori":
+                selected_facts = [f for f in cultural_facts if f["id"] == "F26"]
+                reply_text = compose_variation(
+                    "rule::jangdan_gutgeori",
+                    (
+                        "Nothing gets shoulders swaying in a Korean courtyard faster than Gutgeori. Built on a lilting, syncopated 12-beat swing, it bridges lively folk dances and shamanic ritual gatherings—pulling players and spectators alike into an infectious communal bounce.",
+                        "Across folk dance and shamanic rites alike, 12-beat Gutgeori brings an unmistakable rolling groove—anchored by a crisp Deong downbeat and lifted by playful syncopation across the thin right head.",
+                    ),
+                    (
+                        "Want to contrast Gutgeori's smooth swing with asymmetric 10-beat Eonmori or blazing Hwimori?",
+                        "Curious how chuimsae shouts like 'Eolssigu!' energize a Gutgeori groove live on stage?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "chuimsae_offer"})
+            elif single_jangdan == "eonmori":
+                selected_facts = [f for f in cultural_facts if f["id"] == "F27"]
+                reply_text = compose_variation(
+                    "rule::jangdan_eonmori",
+                    (
+                        "Just when your ears expect neat 12-beat symmetry, Eonmori tilts the floor beneath you. Built on an asymmetric 10-beat grouping of 3+2+3+2, its off-kilter pulse conjures mystery, heroic entrances and supernatural tension in Pansori drama.",
+                        "Eonmori stands out immediately for its crooked 10-beat architecture (3+2+3+2). Whenever a mysterious figure, spirit or bold hero enters a dramatic scene, that asymmetric lilt warns listeners something uncanny is unfolding.",
+                    ),
+                    (
+                        "Want to charge straight into urgent 12-beat Jajinmori battle energy next, or slow down to Jinyangjo?",
+                        "Should we compare Eonmori's asymmetric 10-beat tension with blazing 4-beat Hwimori?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "slow_or_fast_rhythms", "slow_done": True})
+            elif single_jangdan == "jajinmori":
+                selected_facts = [f for f in cultural_facts if f["id"] in {"F24", "F36"}]
+                reply_text = compose_variation(
+                    "rule::jangdan_jajinmori",
+                    (
+                        "When the plot breaks into a sprint, the drummer shifts straight into Jajinmori—a fast, urgent 12/8 cycle brimming with tension and action. In Pansori masterpieces like Jeokbyeokga (Song of the Red Cliffs), Jajinmori paints the clash of naval battle without needing a single real war drum.",
+                        "Driven by brisk, relentless 12-beat propulsion, Jajinmori scores high-stakes chases, comic flurries and wartime scenes such as the famed naval battle in Jeokbyeokga.",
+                    ),
+                    (
+                        "Want to push even faster into the 4-beat sprint of Hwimori, or hear why real military Daechwita marched with the yonggo instead?",
+                        "Should we compare Jajinmori's urgency with blazing 4-beat Hwimori next?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "slow_or_fast_rhythms", "slow_done": True})
+            elif single_jangdan == "hwimori":
+                selected_facts = [f for f in cultural_facts if f["id"] == "F25"]
+                reply_text = compose_variation(
+                    "rule::jangdan_hwimori",
+                    (
+                        "Picture the final breathless minutes of a village festival or Samulnori showcase—that whirlwind is Hwimori. Compressing rhythm into a blazing 4-beat gallop, drummers whip rapid syncopated accents faster and faster until the whole room hits peak climax.",
+                        "Hwimori is the full-throttle sprint of traditional jangdan cycles: four urgent beats hurtling forward in dazzling, accelerated strikes that bring performances to a triumphant finale.",
+                    ),
+                    (
+                        "Want to catch your breath on the exact opposite end with slow 24-beat Jinyangjo?",
+                        "Should we look at the flexible bamboo yeolchae wrist whip that makes Hwimori speeds possible?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "slow_or_fast_rhythms", "fast_done": True})
             else:
-                selected_facts = [f for f in self.repository.get_verified_facts("cultural_use") if f["id"] in {"F21", "F22", "F24", "F25", "F26", "F27"}]
+                selected_facts = [f for f in cultural_facts if f["id"] in {"F21", "F22", "F24", "F25", "F26", "F27"}]
                 reply_text = compose_variation(
                     "rule::jangdan_list",
                     (
                         (
-                            "Korean jangdan ('long-short' cycles) define each piece's pace and emotion:\n"
-                            "- Jinyangjo: Slowest 24-beat pattern carrying deep sorrow and aristocratic dignity.\n"
-                            "- Jungmori: Calm 12-beat walking tempo suited to lyrical storytelling.\n"
-                            "- Jungjungmori: Bouncing 12-beat groove with a bright, lilting feel.\n"
-                            "- Jajinmori: Urgent, brisk 12-beat drive for action and battle scenes.\n"
-                            "- Hwimori: Blistering 4-beat pattern racing into a climax.\n"
-                            "- Gutgeori: Swinging 12-beat rhythm central to folk dance and shamanic ritual.\n"
-                            "- Eonmori: Asymmetric 10-beat cycle (3+2+3+2) for heroic or uncanny passages."
+                            "Think of Korean jangdan cycles like seven shifting chapters in a musical story. A tragic Pansori lament opens gently over slow, breathing 24-beat Jinyangjo filled with deep sorrow and aristocratic dignity, then eases forward into calm 12-beat Jungmori like a steady walk down a road before springing into buoyant Jungjungmori.\n\n"
+                            "Out in village dance or shamanic ritual, players lean into swinging 12-beat Gutgeori, or tilt into the uncanny 3+2+3+2 pulse of 10-beat Eonmori whenever spirits or heroes arrive. And when battle or climax erupts, rapid 12-beat Jajinmori drives the chase until blazing 4-beat Hwimori leaves the room breathless."
                         ),
                         (
-                            "Seven foundational jangdan cycles span the tempo spectrum:\n"
-                            "- Slow to walking: Jinyangjo (24-beat tragic/dignified breadth), Jungmori (steady 12-beat walking pulse) and Jungjungmori (cheerful 12-beat bounce).\n"
-                            "- Swinging & asymmetric: Gutgeori (syncopated 12-beat folk dance swing) and Eonmori (3+2+3+2 10-beat heroic tilt).\n"
-                            "- Fast & climactic: Jajinmori (brisk 12-beat action cycle) and Hwimori (fastest 4-beat climax)."
+                            "Walk through a full Korean performance and you hear seven jangdan moods shaping every scene along the way. Storytellers lean on expansive 24-beat Jinyangjo for heartbreaking reflection, shift into calm 12-beat Jungmori for lyrical storytelling and lift the room with playful Jungjungmori.\n\n"
+                            "From there, swinging 12-beat Gutgeori sweeps dancers onto their feet in folk and shamanic rites, crooked 10-beat Eonmori (3+2+3+2) signals mysterious heroes, urgent 12-beat Jajinmori charges through battle action and explosive 4-beat Hwimori crowns the climax."
                         ),
                         (
-                            "Every piece rides on a named jangdan cycle tailored to its mood—from expansive 24-beat Jinyangjo for grief, calm 12-beat Jungmori walking meter, buoyant Jungjungmori and syncopated 12-beat Gutgeori folk swing, all the way to asymmetric 10-beat Eonmori (3+2+3+2), fast 12-beat Jajinmori and explosive 4-beat Hwimori."
+                            "Every Korean piece rides on a named jangdan cycle tailored to its human mood—stretching out in solemn 24-beat Jinyangjo for grief, stepping comfortably across 12-beat Jungmori walking tempo, bouncing through cheerful Jungjungmori and swaying to 12-beat Gutgeori folk swing, before turning mysterious in asymmetric 10-beat Eonmori (3+2+3+2), racing with urgent 12-beat Jajinmori and peaking in fearless 4-beat Hwimori."
                         ),
                     ),
                     (
-                        "Which of those rhythmic moods would you like to dig into first?",
-                        "Any particular cycle among the seven you want to practice or inspect closer?",
-                        "Want to zoom in on one of these tempos—from Jinyangjo's calm breadth to Hwimori's speed?",
+                        "Which chapter of rhythm—slow sorrowful Jinyangjo, swinging Gutgeori or blazing Hwimori—sounds closest to what you want to hear next?",
+                        "Any single cycle among those seven stories you want to explore closely?",
+                        "Want to step inside one of these tempos—from walking Jungmori to Hwimori's sprint?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -182,17 +294,14 @@ class InferenceEngine:
                 "rule::ask_etymology",
                 (
                     (
-                        "Historically, its names capture both play technique and hourglass geometry:\n"
-                        "- Janggu / Janggo (장고 / 杖鼓): Combines Hanja characters for 'stick' (杖) and 'drum' (鼓), pointing to mallet/whip excitation.\n"
-                        "- Seyogo (細腰鼓): An earlier label literally meaning 'slim waist drum', highlighting the pinched midsection."
+                        "Even the instrument's oldest names tell two quick stories about how Koreans saw and played it. Long ago, chroniclers called it the seyogo (細腰鼓)—literally the 'slim waist drum'—because its pinched wooden silhouette caught the eye first.\n\n"
+                        "Later, speakers paired the Sino-Korean characters for 'stick' (杖) and 'drum' (鼓) into janggo (장고 / 杖鼓), or janggu, putting the focus on the thin sticks striking both skins."
                     ),
                     (
-                        "Two classical names tell the story of the instrument: janggu (written janggo 장고 / 杖鼓 in Sino-Korean characters for 'stick' 杖 and 'drum' 鼓) highlights how sticks excite the skins, while the older term seyogo (細腰鼓) means 'slim waist drum' after its hourglass silhouette."
+                        "Two classical names hand down the story of the drum's shape and play style: the earlier title seyogo (細腰鼓, meaning 'slim waist drum') points right at its narrowed midsection, whereas janggu / janggo (장고 / 杖鼓) links the Sino-Korean words for 'stick' (杖) and 'drum' (鼓) to celebrate stick-driven drumming."
                     ),
                     (
-                        "The drum's nomenclature breaks into two descriptors:\n"
-                        "1. Seyogo (細腰鼓, 'slim waist drum'), used in early records for its slender center tube.\n"
-                        "2. Janggu / Janggo (장고 / 杖鼓), pairing 'stick' (杖) + 'drum' (鼓) to emphasize stick-struck percussion."
+                        "Trace the drum's Korean names backward and two vivid images emerge—first, the physical outline captured by seyogo (細腰鼓, 'slim waist drum'), and second, the motion of a drummer's hands preserved in janggu or janggo (장고 / 杖鼓), combining 'stick' (杖) with 'drum' (鼓)."
                     ),
                 ),
                 (
@@ -214,22 +323,20 @@ class InferenceEngine:
                     "rule::evo_conservation",
                     (
                         (
-                            "Museum conservation protects fragile drums through non-destructive forensics and strict climate equilibrium:\n"
-                            "- Imaging & dendrochronology: Synchrotron X-ray Microtomography (SR-μCT) and CT scans inspect hidden dowels, animal-glue repairs and earlywood/latewood ring widths for Joseon-era dating without dismantling the shell.\n"
-                            "- Chemical forensics: Portable X-ray Fluorescence (p-XRF) checks heavy metals in antique ottchil lacquer and identifies damaging prior PEG consolidants.\n"
-                            "- Climate & 3D archiving: Institutions maintain 20°C and 50 to 55% relative humidity to avert jorongmok micro-fracturing, archive shapes via 3D photogrammetry and catalog treasures like National Museum Goryeo sajanggu Duksu 1726 (bisaek celadon fired around 1,150°C at Gangjin kilns)."
+                            "Picture a conservator holding a fragile Joseon or Goryeo janggu—cutting into old wood would ruin it, so museum science reads its story without opening a single joint. Using Synchrotron X-ray Microtomography (SR-μCT) and CT scans, researchers peer straight through centuries-old timber to discover concealed dowels, historical animal-glue repairs and micro-fractures while reading earlywood and latewood growth rings via dendrochronology.\n\n"
+                            "Outside the shell, portable X-ray Fluorescence (p-XRF) traces heavy metals in antique ottchil lacquer and catches damaging prior PEG consolidants. To stop swelling or jorongmok cracks, galleries hold climate equilibrium near 20°C and 50 to 55% relative humidity while capturing 3D photogrammetry twins—even preserving delicate National Museum Goryeo bisaek celadon sajanggu Duksu 1726 fired around 1,150°C at Gangjin kilns."
                         ),
                         (
-                            "Non-destructive science keeps historic janggu intact: SR-μCT and cylindrical CT reveal concealed internal joinery, wood dowels and dendrochronology ring histories, while p-XRF spots ottchil lacquer pigments and past Polyethylene Glycol (PEG) treatments. To stop hygroscopic swelling or jorongmok micro-fracturing, museums hold 20°C and 50–55% relative humidity and capture 3D photogrammetry digital twins—including National Museum Goryeo celadon sajanggu Duksu 1726 from the ~1,150°C Gangjin kilns."
+                            "Without touching a saw to fragile artifacts, conservators uncover centuries of craftsmanship through imaging and chemistry: SR-μCT and cylindrical CT reveal hidden internal dowels, antique glue fixes and dendrochronology ring histories, while p-XRF maps antique ottchil pigments and past Polyethylene Glycol (PEG) treatments. Inside climate rooms held steady at 20°C and 50–55% relative humidity to prevent jorongmok micro-fracturing, museums build 3D photogrammetry digital twins—safeguarding treasures like Goryeo celadon sajanggu Duksu 1726 from Gangjin's ~1,150°C kilns."
                         ),
                         (
-                            "Forensic conservation combines Synchrotron X-ray Microtomography (SR-μCT) and ring-width dendrochronology with p-XRF elemental analysis (detecting ottchil metals and PEG consolidants), 3D photogrammetric replicas and climate stabilization near 20°C / 50–55% relative humidity—safeguarding wooden chambers as well as Goryeo bisaek celadon sajanggu Duksu 1726 fired near 1,150°C in Gangjin."
+                            "Forensic conservation turns historic instruments into readable time capsules: Synchrotron X-ray Microtomography (SR-μCT) and climate-ring dendrochronology inspect concealed joinery non-destructively while p-XRF identifies authentic ottchil metals and older PEG consolidants, backed by 3D photogrammetric replicas and calm 20°C / 50–55% humidity vaults protecting both wooden janggu bodies and Goryeo bisaek celadon Duksu 1726 (~1,150°C Gangjin firing)."
                         ),
                     ),
                     (
-                        "Want to examine the micro-anatomy of Paulownia coreana wood next?",
-                        "Curious why Goryeo celadon sajanggu yielded to carved wood for mobile dances?",
-                        "Should we explore nakdong scorching or traditional animal-glue joinery next?",
+                        "Want to hear the botanical story of Paulownia coreana wood before it even enters a workshop?",
+                        "Curious why Goryeo celadon sajanggu stayed in chambers while wood took over the folk road?",
+                        "Should we explore nakdong iron scorching or antique animal-glue joinery next?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -241,22 +348,20 @@ class InferenceEngine:
                     "rule::evo_ebnf",
                     (
                         (
-                            "Jeongganbo computational grammars define a plaintext EBNF structure for synthetic playback and optical engraving (Umulsai):\n"
-                            "- Score ::= Gak+, Gak ::= Jeonggan+, Jeonggan ::= (Stroke | SubJeonggan | Rest)\n"
-                            "- SubJeonggan ::= Stroke Stroke | Stroke Rest, Stroke ::= 'Deong' | 'Gung' | 'Tta' | 'Gideok' | 'Jjak', Rest ::= '△' | '-'\n"
-                            "By adjusting temporal values on SubJeonggan cells, algorithms interpolate expressive micro-timing swing and rubato—complementing MelCNN classifiers tracking sharp tta onset smears and high-Q gung resonance peaks."
+                            "Think of Jeongganbo EBNF as translating King Sejong's 15th-century ink grid into a script a computer can breathe with. Where a traditional musician looks down columns of squares, KAIST's Umulsai project formalizes that layout cleanly—defining `Score ::= Gak+`, `Gak ::= Jeonggan+`, `Jeonggan ::= (Stroke | SubJeonggan | Rest)`, `SubJeonggan ::= Stroke Stroke | Stroke Rest`, with `Stroke ::= 'Deong' | 'Gung' | 'Tta' | 'Gideok' | 'Jjak'` and `Rest ::= '△' | '-'`.\n\n"
+                            "By stretching or nudging the duration inside those SubJeonggan tokens, software can recreate living human swing and rubato rather than stiff robotic clicks—pairing neatly with MelCNN classifiers that recognize crisp tta onset smears beside high-Q gung bass peaks."
                         ),
                         (
-                            "Formalizing King Sejong's 1447 grid, Jeongganbo EBNF defines Score ::= Gak+ -> Gak ::= Jeonggan+ -> SubJeonggan ::= Stroke Stroke | Stroke Rest across Stroke tokens ('Deong', 'Gung', 'Tta', 'Gideok', 'Jjak') and Rest symbols ('△' | '-'). SubJeonggan duration scaling models human swing and rubato, pairing cleanly with MelCNN onset-smear vs. high-Q gung stroke detection."
+                            "Back in 1447, King Sejong arranged beats in visual square columns called gak; modern digital engraving systems like Umulsai retell that geometry as formal EBNF rules (`Score ::= Gak+`, `Gak ::= Jeonggan+`, `Jeonggan ::= (Stroke | SubJeonggan | Rest)`, `SubJeonggan ::= Stroke Stroke | Stroke Rest`, strokes `Deong`/`Gung`/`Tta`/`Gideok`/`Jjak` and rests `△`/`-`). Scaling SubJeonggan time lets machines mimic subtle performance swing and rubato alongside MelCNN recognition of tta smears versus high-Q gung strikes."
                         ),
                         (
-                            "Plaintext EBNF production rules (Score ::= Gak+, Gak ::= Jeonggan+, Jeonggan ::= Stroke | SubJeonggan | Rest with SubJeonggan allowing swing/rubato micro-timing) power algorithmic score conversion in KAIST's Umulsai, alongside MelCNN spectrogram recognition distinguishing broadband tta onset smears from high-Q gung peaks."
+                            "To bridge Joseon paper scores and modern software, EBNF rules trace columns from `Score ::= Gak+` down through `Jeonggan ::= Stroke | SubJeonggan | Rest`, where adjusting `SubJeonggan` subdivisions encodes genuine human rubato and swing—working alongside MelCNN spectrogram models that tell sharp tta onset smears apart from resonant high-Q gung peaks."
                         ),
                     ),
                     (
-                        "Want to look at FDTD waveguide meshes or how Jeongganbo gak columns are tuned microtonally?",
-                        "Curious how KAIST's Umulsai pairs EBNF grammars with JSON layout rules?",
-                        "Should we examine 2D FDTD membrane synthesis on Bela microcontrollers next?",
+                        "Want to hear how digital acoustics software simulates the drum's membranes in FAUST next?",
+                        "Curious how Jeongganbo columns follow microtonal pitch beside instruments like ajaeng and piri?",
+                        "Should we jump into 2D FDTD waveguide synthesis on Bela boards or trace Umulsai OMR?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -267,23 +372,20 @@ class InferenceEngine:
                     "rule::evo_ml_dsp",
                     (
                         (
-                            "Computational organology models and analyzes the janggu across three digital pipelines:\n"
-                            "- Stroke classification ML: Transient Mel-spectrogram CNNs (MelCNN), hybrid CNN/RNNs and fine-tuned MERT-v1 (95M parameters) distinguish broadband tta onset smears from high-Q gung peaks over piezo/accelerometer streams via Macro F1 and Event F1/IoU (distinct from F0CNN/RMVPE for vocal sigimsae).\n"
-                            "- FDTD / Digital Waveguide Mesh (DWM): Coded in FAUST under CFL stability conditions coupled to a 1D shell guide, rectilinear membrane updates follow p(i,j,n+1) = 0.5*(p(i-1,j,n)+p(i+1,j,n)+p(i,j-1,n)+p(i,j+1,n)) - p(i,j,n-1) with hoop compliance and joimjul boundary tension.\n"
-                            "- Hardware iJanggu & Umulsai: Embedded piezo contact mics mounted inside the Paulownia shell or beneath the bukpyeon feed Bela boards running Pure Data or FAUST without MIDI latency."
+                            "Bringing an ancient wooden drum into modern code meant solving two separate puzzles. First, percussion strikes do not glide across vocal melodies like singing sigimsae tracked by F0CNN and RMVPE—instead, crisp tta hits splatter vertical energy while gung beats leave focused low-frequency high-Q peaks. So researchers train transient MelCNN, hybrid CNN/RNN and 95M-parameter MERT-v1 models on piezo and accelerometer streams, grading transcription with Macro F1 and Event F1/IoU metrics.\n\n"
+                            "Meanwhile, synthesis engineers build a virtual skin out of FAUST FDTD Digital Waveguide Meshes obeying CFL stability—advancing grid pressure as `p(i,j,n+1) = 0.5*(p(i-1,j,n)+p(i+1,j,n)+p(i,j-1,n)+p(i,j+1,n)) - p(i,j,n-1)` against hoop and joimjul boundary tension coupled to a 1D cavity guide—while the hybrid iJanggu hides piezo pickups inside the Paulownia shell or beneath bukpyeon to drive real-time Bela boards running Pure Data or FAUST without MIDI latency."
                         ),
                         (
-                            "Modern audio computing pairs transient ML transcription with physically modeled DSP:\n"
-                            "Because percussion strikes yield sharp tta onset smears and low-Q/high-Q gung peaks rather than vocal F0 curves tracked by F0CNN/RMVPE, models apply MelCNN, CNN/RNN and MERT-v1 (95M) with Macro F1 and Event F1/IoU metrics. Meanwhile, FAUST physical synthesis runs CFL-stable 2D FDTD Digital Waveguide Meshes [p(i,j,n+1) = 0.5*(neighbors) - p(i,j,n-1)] coupled to a 1D cavity, powered by iJanggu piezo pickups inside the shell or beneath bukpyeon directly into Bela (Pure Data / FAUST) without MIDI latency."
+                            "Modern digital organology follows the drummer's hands from skin strike straight to synthesis code: where vocal software uses F0CNN/RMVPE for singing ornaments, janggu systems rely on MelCNN and MERT-v1 (95M) to separate broadband tta smears from resonant gung peaks (scored via Macro F1 and Event F1/IoU). On physical synthesis, CFL-stable 2D FDTD waveguide meshes in FAUST (`p(i,j,n+1) = 0.5*(neighbors) - p(i,j,n-1)`) connect two virtual hides over a 1D cavity while iJanggu mounts piezo mics inside Paulownia shells or under bukpyeon straight into Bela microcontrollers (Pure Data / FAUST) with zero MIDI lag."
                         ),
                         (
-                            "From MERT-v1 (95M) and MelCNN spectrogram stroke transcription to real-time FAUST FDTD Digital Waveguide Meshes—updating p(i,j,n+1) = 0.5*(p(i-1,j,n)+p(i+1,j,n)+p(i,j-1,n)+p(i,j+1,n)) - p(i,j,n-1) under CFL limits with hoop and joimjul boundary compliance—hardware iJanggu units route piezo pickups placed inside the Paulownia shell or beneath bukpyeon into Bela boards running Pure Data or FAUST."
+                            "From piezoelectric shell and under-bukpyeon sensors feeding Bela boards (Pure Data / FAUST) to eliminate MIDI delay, up through FAUST 2D FDTD Digital Waveguide Meshes updating rectilinear grids under CFL limits alongside MERT-v1 (95M) and MelCNN models distinguishing sharp tta smears from gung peaks, computational musicology lets the physical janggu speak directly inside code."
                         ),
                     ),
                     (
-                        "Want to inspect the Jeongganbo EBNF grammar or museum forensic imaging (SR-μCT / p-XRF)?",
-                        "Curious how 3D Vibrometry (SLDV) and TMM fluid models validate the cavity waves?",
-                        "Should we explore MelCNN spectrogram vs. vocal F0CNN distinctions or museum conservation next?",
+                        "Want to step inside museum conservation next—seeing how SR-μCT and p-XRF study ancient shells?",
+                        "Curious about how KAIST's Jeongganbo EBNF grammar turns old notation into playable scores?",
+                        "Should we explore 3D Vibrometry (SLDV) laser scans of real vibrating hides next?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -319,22 +421,20 @@ class InferenceEngine:
                     "rule::evo_ijanggu",
                     (
                         (
-                            "Two landmark research efforts connect traditional janggu heritage to modern computing:\n"
-                            "- Umulsai (KAIST, led by Danbinaerin Han): Optical music recognition (OMR) software applying EBNF grammars and JSON rules to digitize traditional Jeongganbo scores.\n"
-                            "- iJanggu: Rather than using flat capacitive electronic drum pads that lose stick rebound and feel, iJanggu mounts piezoelectric contact sensors onto natural hides to drive physical modeling synthesis."
+                            "When engineers tried putting the janggu into the digital age, they quickly saw that flat capacitive electronic drum pads killed what makes the drum come alive: the rebound of horsehide and flex of a bamboo stick. So the hybrid iJanggu takes a different route—tucking piezoelectric contact sensors directly onto natural membranes so every subtle touch drives physical modeling synthesis in real time.\n\n"
+                            "Across on the preservation front at KAIST, Danbinaerin Han led the Umulsai optical music recognition (OMR) system, applying EBNF grammars and JSON rules to translate old Jeongganbo drum scores into living digital records."
                         ),
                         (
-                            "Digital organology touches both score preservation and electronic performance:\n"
-                            "On the notation side, Danbinaerin Han's Umulsai OMR toolkit at KAIST translates Jeongganbo drum grids via EBNF grammars and JSON rules. On the hardware side, the iJanggu attaches piezo contact sensors to genuine animal skins—capturing natural tactile play that flat capacitive electronic drum pads miss, driving physical modeling synthesis."
+                            "Rather than flattening the instrument onto lifeless capacitive electronic pads, the iJanggu wires piezoelectric pickups onto authentic skins so acoustic vibration sparks physical modeling synthesis while keeping real tactile rebound intact. At KAIST, Danbinaerin Han's Umulsai OMR software decodes traditional Jeongganbo scores via EBNF grammars and JSON layout rules."
                         ),
                         (
-                            "Modern engineers extended the janggu computationally without replacing its touch: the iJanggu instruments natural skins with piezoelectric pickups for physical modeling synthesis (outperforming stiff capacitive electronic pads), while KAIST's Umulsai OMR system led by Danbinaerin Han parses Jeongganbo scores with EBNF grammars and JSON rules."
+                            "Two modern innovations carry craft heritage into computing: the iJanggu steps past stiff capacitive electronic drum pads by mounting piezo contact sensors straight onto real janggu skins for physical modeling synthesis, while KAIST's Umulsai OMR project led by Danbinaerin Han parses Jeongganbo manuscripts using EBNF grammars and JSON rules."
                         ),
                     ),
                     (
-                        "Want to compare synthetic Mylar/FRP practice drums next, or look at circular membrane physics?",
+                        "Want to look at weather-resistant FRP/Mylar school drums next, or dive into circular membrane physics?",
                         "Curious about FRP/Mylar school instruments or Bessel-mode acoustics next?",
-                        "Should we inspect modern synthetic drumheads or the mechanics of wooden drums?",
+                        "Should we inspect modern synthetic drumheads or natural Paulownia workshop crafting next?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -345,17 +445,14 @@ class InferenceEngine:
                     "rule::evo_default",
                     (
                         (
-                            "From Three Kingdoms waist drums and fragile 13th-century Goryeo celadon sajanggu vessels replaced by carved wood, the instrument kept evolving across four modern shifts:\n"
-                            "- 1978 Samulnori: Kim Deok-soo adapted outdoor pungmul into indoor quartets, later joined by female drummers transforming kinetic stage movement.\n"
-                            "- 21st-century materials: Fiberglass-reinforced plastic (FRP) shells and synthetic Mylar heads withstand school humidity, though purists miss natural wood and hide overtones.\n"
-                            "- Computational musicology: KAIST's Umulsai OMR software digitizes Jeongganbo notation while the piezo-equipped iJanggu links acoustic skins to physical synthesis."
+                            "The story of how the janggu evolved keeps moving between royal chambers, village fields, modern stages and engineering labs. After Three Kingdoms waist drums and fragile 13th-century Goryeo celadon sajanggu vessels gave way to durable carved wood on the folk road, Kim Deok-soo launched Samulnori in 1978, distilling ambulatory pungmul bands into a seated quartet where modern female drummers also reshaped performance energy with fierce kinetic gestures.\n\n"
+                            "By the 21st century, classrooms adopted humidity-proof fiberglass (FRP) shells and Mylar heads alongside wooden drums—though purists still prefer wood and natural hide overtones—while KAIST's Umulsai OMR software and the piezo-equipped iJanggu carried traditional drumming into digital synthesis."
                         ),
                         (
-                            "Across centuries the janggu moved from Silla waist drums and heavy Goryeo ceramic sajanggu chamber pieces (eventually giving way to lighter wood) into contemporary stages and labs:\n"
-                            "Kim Deok-soo's 1978 Samulnori brought village rhythms indoors (with women later reshaping its dynamic stage gestures); FRP fiberglass shells and Mylar heads serve durable school use; and KAIST's Umulsai OMR software alongside the piezoelectric iJanggu bring the drum into digital synthesis."
+                            "Over centuries the drum reinvented itself without losing its hourglass soul: heavy Goryeo ceramic sajanggu chamber pieces yielded to carved wood for outdoor dances, Kim Deok-soo launched Samulnori in 1978 (with female stage drummers reshaping its athletic kinetics), school programs adopted synthetic fiberglass FRP shells and Mylar heads for harsh humidity despite purists preferring Paulownia wood, and digital tools from Umulsai OMR to the piezoelectric iJanggu carried it into contemporary computation."
                         ),
                         (
-                            "Modernization reshaped the janggu on stage, in workshops and inside software labs—spanning Samulnori's 1978 concert transformation under Kim Deok-soo (and evolving kinetic styles by female drummers), humidity-proof 21st-century FRP/Mylar models versus traditional wood, and digital projects like Umulsai OMR plus the sensor-equipped iJanggu (after ceramic sajanggu gave way to wooden bodies)."
+                            "Modernization reshaped the janggu in stages—from porcelain sajanggu chambers to portable wood, from Samulnori's 1978 seated concert transformation under Kim Deok-soo and energetic modern female stage performers, to weatherproof 21st-century FRP/Mylar drums beside classic wooden ones and lab breakthroughs like KAIST's Umulsai OMR and the sensor-equipped iJanggu."
                         ),
                     ),
                     (
@@ -383,7 +480,7 @@ class InferenceEngine:
                         "Two exceptions connect it to military culture today: contemporary ROKA army bands bring it out for ceremonial stage concerts, while Pansori narrators portray dramatic battles (such as Jeokbyeokga) over the fast 12/8 Jajinmori beat."
                     ),
                     (
-                        "Korean military marches (Daechwita) skipped the janggu in favor of the resonant yonggo barrel drum so single-toned orders carried clearly without dual high-and-low timbre interference obscuring commands.\n\n"
+                        "Korean military marches (Daechwita) excluded the janggu in favor of the resonant yonggo barrel drum so single-toned orders carried clearly without dual high-and-low timbre interference obscuring commands.\n\n"
                         "That said, modern South Korean ROKA military bands do feature the janggu on ceremonial concert stages, and Pansori uses its brisk 12/8 Jajinmori groove to dramatize wartime clashes like Jeokbyeokga."
                     ),
                 ),
@@ -407,20 +504,14 @@ class InferenceEngine:
                     "rule::origin_archaeology",
                     (
                         (
-                            "Early archaeological finds trace hourglass drums across all Three Kingdoms and Unified Silla:\n"
-                            "- Goguryeo: Murals in Anak No. 3, Deokheung-ri (c. 408 CE), Susan-ri and Palcheong-ri show waist drums alongside five-stringed pipas.\n"
-                            "- Baekje: Buyeo's Great Gilt-Bronze Incense Burner (Geumdong Daehyangno) casts a musician playing a waisted drum in relief.\n"
-                            "- Unified Silla: The Samguk Sagi documents the 651 CE Eumseongseo music office, while the Sangwonsa and King Seongdeok (771 CE) bronze bells bear seyogo reliefs."
+                            "Walk into Korea's oldest tombs and temples and you see waisted drums carved centuries before anyone wrote down the word janggu. By lantern light in Goguryeo mural tombs—Anak No. 3, Deokheung-ri from around 408 CE, Susan-ri and Palcheong-ri—painted court players beat waisted drums side by side with five-stringed pipas from Central Asia.\n\n"
+                            "Travel south to Baekje in Buyeo and you find a miniature musician cast in high relief playing a waisted drum atop the Great Gilt-Bronze Incense Burner (Geumdong Daehyangno). Later in Unified Silla, the Samguk Sagi chronicles the creation of the royal Eumseongseo music office in 651 CE, while bronze reliefs on the Sangwonsa and 771 CE King Seongdeok bells still show celestial musicians playing the seyogo."
                         ),
                         (
-                            "Tomb art, metalwork and temple bells preserve concrete visual proof of early Korean waist drums:\n"
-                            "Fifth-century Goguryeo tombs—Anak No. 3, Deokheung-ri (c. 408 CE), Susan-ri and Palcheong-ri—pair waist-drum players with imported pipas; Baekje artisans sculpted one atop the Geumdong Daehyangno incense burner in Buyeo; and Unified Silla records note the 651 CE Eumseongseo office alongside seyogo reliefs on the Sangwonsa and 771 CE King Seongdeok bells."
+                            "Stone murals, bronze incense burners and ancient temple bells tell the story together across the Three Kingdoms and Silla: fifth-century Goguryeo tombs—Anak No. 3, Deokheung-ri (c. 408 CE), Susan-ri and Palcheong-ri—depict waist drums next to imported pipas; Baekje artisans cast a waisted drummer onto Buyeo's Geumdong Daehyangno bronze incense burner; and Unified Silla recorded the 651 CE Eumseongseo music bureau while embossing seyogo reliefs across the Sangwonsa and 771 CE King Seongdeok bronze bells."
                         ),
                         (
-                            "Across ancient Korea, waist drums appear in stone paint, bronze casting and state annals:\n"
-                            "- Goguryeo murals (c. 408 CE Deokheung-ri, Anak No. 3, Susan-ri, Palcheong-ri) depict cross-cultural court musicians with pipas and waist drums.\n"
-                            "- Baekje's Geumdong Daehyangno bronze incense burner from Buyeo includes a relief hourglass drummer.\n"
-                            "- Silla established Eumseongseo in 651 CE (Samguk Sagi) and etched seyogo celestial players on Sangwonsa and King Seongdeok bells (771 CE)."
+                            "Before paper treatises survived, Korean artisans left three kinds of physical witnesses: painted Goguryeo tomb players (Deokheung-ri c. 408 CE, Anak No. 3, Susan-ri and Palcheong-ri) keeping time beside five-stringed pipas, Baekje's relief drummer on the Geumdong Daehyangno incense burner excavated in Buyeo and Unified Silla's 651 CE Eumseongseo court bureau paired with seyogo musicians cast onto Sangwonsa and King Seongdeok (771 CE) bells."
                         ),
                     ),
                     (
@@ -478,7 +569,7 @@ class InferenceEngine:
                     session=session,
                     separator=" ",
                 )
-            elif "akhak_gwebeom" in entities:
+            elif "akhak_gwebeom" in entities or "galgo" in entities:
                 selected_facts = [f for f in all_chronology if f["id"] == "F15"]
                 reply_text = compose_variation(
                     "rule::chron_akhak",
@@ -513,36 +604,107 @@ class InferenceEngine:
                     separator=" ",
                 )
                 session.set_pending_offer({"type": "silla_evolution"})
+            elif "jeongganbo" in entities:
+                all_v = self.repository.get_verified_facts()
+                selected_facts = [f for f in all_v if f["id"] in {"F29", "F55", "F63"}]
+                reply_text = compose_variation(
+                    "rule::chron_jeongganbo",
+                    (
+                        "In the 15th century (around 1447 AD), King Sejong the Great gave Korean rhythm something astonishingly ahead of its time: Jeongganbo, a spatial 2D grid notation where each square cell (jeonggan) captures exact beat duration alongside dedicated janggu stroke symbols. Read top-to-bottom and right-to-left across gak columns, it preserved living rhythmic timing centuries before modern DAW grids—and today even powers KAIST's Umulsai EBNF grammar.",
+                        "Before King Sejong devised Jeongganbo in the 15th century (1447), drummers passed every cadence purely by ear and hand. His 2D grid matrix assigned one jeonggan box per unit of time across vertical gak columns, recording both duration and exact janggu strokes on paper.",
+                    ),
+                    (
+                        "Want to see how Seong Hyeon's 1493 Akhak Gwebeom later codified the drum's hides, or how KAIST formalized Jeongganbo in EBNF?",
+                        "Curious how modern software turns those 15th-century Jeongganbo cells into digital EBNF notation?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+            elif "choi_seung_hee" in entities:
+                selected_facts = [f for f in all_chronology if f["id"] == "F08"]
+                reply_text = compose_variation(
+                    "rule::chron_choi",
+                    (
+                        "During the 1930s, pioneering modern dancer Choi Seung-hee carried the janggu far beyond courtyard festivals and onto international theater stages. Strapping the hourglass drum across her torso, she fused traditional percussion and dynamic choreography so audiences overseas witnessed the janggu as a kinetic solo stage art.",
+                        "In the 1930s, trailblazing choreographer Choi Seung-hee transformed janggu dance into a celebrated international stage performance—turning traditional strapped-drum movement into a signature emblem of modern Korean choreography.",
+                    ),
+                    (
+                        "Want to step forward to 1951 when Seoul founded the National Gugak Center, or explore solo Seoljanggu drumming?",
+                        "Should we look at how the National Gugak Center or UNESCO later safeguarded these living traditions?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+            elif "ngc_jangagwon" in entities:
+                selected_facts = [f for f in all_chronology if f["id"] in {"F09", "F15"}]
+                reply_text = compose_variation(
+                    "rule::chron_ngc",
+                    (
+                        "Founded in 1951 in the midst of turbulent modern history, the National Gugak Center in Seoul carried forward the unbroken institutional lineage of Joseon's royal Jangagwon music bureau. Inside its halls, classical court Jeongak and standardized janggu repertoire codified back in the 1493 Akhak Gwebeom stayed alive for new generations.",
+                        "When the National Gugak Center opened in 1951, it preserved the direct institutional heritage of the Joseon dynasty's royal Jangagwon—keeping ancestral court janggu techniques and repertoire intact from palace ceremony into modern concert halls.",
+                    ),
+                    (
+                        "Want to contrast that court lineage with UNESCO-recognized Nongak community drumming or Choi Seung-hee's 1930s stage dance?",
+                        "Curious how court Jeongak posture compares with rural village folk drumming?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "court_or_folk"})
+            elif "met_museum" in entities:
+                selected_facts = [f for f in self.repository.get_verified_facts() if f["id"] == "F11"]
+                reply_text = compose_variation(
+                    "rule::chron_met",
+                    (
+                        "Far across the ocean in New York, The Metropolitan Museum of Art preserves a 19th-century (1800s) Joseon-era changgo—complete with its hourglass shell, lacing and ceremonial craftsmanship—standing as a tangible bridge between late-Joseon workshops and global museum collections.",
+                        "A preserved 19th-century Joseon changgo now rests in The Metropolitan Museum of Art, giving modern researchers and visitors an intact physical witness to how late-Joseon craftsmen proportioned and laced the drum.",
+                    ),
+                    (
+                        "Want to hear how modern museum conservators scan antique janggu shells with X-ray microtomography and photogrammetry?",
+                        "Curious about the even older 13th-century Goryeo celadon sajanggu preserved in Seoul's National Museum of Korea?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+            elif "unesco" in entities:
+                all_v = self.repository.get_verified_facts() + self.repository.get_disputed_facts()
+                selected_facts = [f for f in all_v if f["id"] in {"F07", "F40"}]
+                reply_text = compose_variation(
+                    "rule::chron_unesco",
+                    (
+                        "In 2014, UNESCO inscribed Nongak—Korea's community band music, dance and village rituals powered by the janggu—onto the Representative List of the Intangible Cultural Heritage of Humanity. Even today, that official 'nongak' title sparks thoughtful discussion alongside 'pungmul', championed since the 1980s minjung movement to honor its deeper communal and shamanic spirit.",
+                        "UNESCO's 2014 inscription of Nongak recognized the janggu-driven community band tradition as Intangible Cultural Heritage of Humanity—bringing global visibility to both its harvest celebrations and the living scholarly conversation between the names 'nongak' and 'pungmul'.",
+                    ),
+                    (
+                        "Want to hear about the lead Seoljanggu player who commands those village bands, or how Nongak differs from court Jeongak?",
+                        "Curious how village folk technique compares with seated royal court playing?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "court_or_folk"})
             else:
                 selected_facts = all_chronology
                 reply_text = compose_variation(
                     "rule::chron_default",
                     (
                         (
-                            "Major milestones mark the janggu's documented timeline in Korea:\n"
-                            "- 1076 AD: Goryeosa records the instructor post janggu-opsa.\n"
-                            "- 1114 AD: King Yejong imports Song Dynasty instruments, codifying hourglass proportions.\n"
-                            "- 1200s (Goryeo): Celadon sajanggu drums crafted, now at the National Museum of Korea.\n"
-                            "- 1447 / 15th C.: King Sejong creates Jeongganbo 2D grid notation including a janggu line.\n"
-                            "- 1493 AD: Seong Hyeon's Akhak Gwebeom codifies asymmetric hides vs. the symmetrical galgo.\n"
-                            "- 1800s: Preserved 19th-century Joseon drum now housed at The Metropolitan Museum of Art.\n"
-                            "- 1930s: Choi Seung-hee stages international janggu dance choreography.\n"
-                            "- 1951 AD: National Gugak Center founded in Seoul, extending the royal Jangagwon lineage.\n"
-                            "- 2014 AD: UNESCO inscribes Nongak community band drumming as Intangible Heritage."
+                            "Imagine following one hourglass drum through nearly a thousand years of Korean history. Our earliest written glimpse arrives in 1076 AD, when the Goryeosa chronicles first name an official court teacher called the janggu-opsa. Only decades later in 1114 AD, King Yejong receives imported court instruments from Song Dynasty China, setting the classic hourglass proportions—while by the 1200s, Goryeo potters even glaze emerald celadon sajanggu vessels like the treasure preserved today in the National Museum of Korea.\n\n"
+                            "During Joseon times, scholars wrote that oral art down: in the 15th century (around 1447 AD), King Sejong devised the Jeongganbo 2D grid notation giving the janggu its own column, and in 1493 AD Seong Hyeon compiled the Akhak Gwebeom to lock in its asymmetric leather hides and tell it cleanly apart from the symmetrical galgo. An 1800s (19th-century) court drum even crossed oceans into The Metropolitan Museum of Art—and in modern memory, Choi Seung-hee carried janggu dance onto global stages in the 1930s, Seoul founded the National Gugak Center in 1951 AD to preserve the old royal Jangagwon lineage, and UNESCO inscribed Nongak community band drumming as World Heritage in 2014 AD."
                         ),
                         (
-                            "Key turning points anchor nearly a millennium of records:\n"
-                            "From the Goryeosa's 1076 AD janggu-opsa title, King Yejong's 1114 Song import and 13th-century National Museum celadon sajanggu, through King Sejong's 15th-century (1447) Jeongganbo grid notation and Seong Hyeon's 1493 Akhak Gwebeom (separating it from the galgo), down to a 19th-century (1800s) Joseon drum at The Metropolitan Museum of Art, Choi Seung-hee's 1930s stage dance, the 1951 National Gugak Center (continuing royal Jangagwon heritage) and UNESCO's 2014 Nongak recognition."
+                            "Open Korea's surviving archives in order and a living human story unfolds from palace halls to global concert stages. It begins inside Goryeo courts with a teacher post—janggu-opsa in the 1076 AD Goryeosa—followed by King Yejong's 1114 AD Song Dynasty instrument import and the 1200s celadon sajanggu drums housed at the National Museum of Korea.\n\n"
+                            "Fifteenth-century Joseon masters then gave the drum its grammar and blueprint: King Sejong's 1447 (15th-century) Jeongganbo grid notation gave strokes an exact place on paper, and Seong Hyeon's 1493 AD Akhak Gwebeom formally separated the asymmetric janggu from the symmetrical galgo. Centuries after an 1800s Joseon drum reached The Metropolitan Museum of Art, 1930s dancer Choi Seung-hee choreographed it for international theaters, Seoul's 1951 National Gugak Center carried the royal Jangagwon tradition out of war, and UNESCO celebrated Nongak drumming on its heritage list in 2014 AD."
                         ),
                         (
-                            "Historians track the janggu across nine landmark chapters:\n"
-                            "Goryeo state records (1076 janggu-opsa in Goryeosa; 1114 Song instrument imports; 1200s celadon sajanggu at the National Museum of Korea), Joseon codification (King Sejong's 1447 Jeongganbo notation; Seong Hyeon's 1493 Akhak Gwebeom vs. galgo; an 1800s court drum at The Metropolitan Museum of Art), and modern heritage (1930s Choi Seung-hee choreography; 1951 National Gugak Center / Jangagwon continuity; 2014 UNESCO Nongak listing)."
+                            "If you trace the janggu as three passing eras of Korean memory, Goryeo comes first: royal chronicles naming janggu-opsa teachers in 1076 AD (Goryeosa), King Yejong welcoming Song instruments in 1114 AD and ceramic artisans shaping 1200s celadon sajanggu drums now kept at the National Museum of Korea.\n\n"
+                            "Joseon scholars took the pen next—King Sejong inventing 15th-century (1447) Jeongganbo grid notation and Seong Hyeon authoring the 1493 AD Akhak Gwebeom to distinguish the drum from the galgo—leaving physical heirs like an 1800s court changgo at The Metropolitan Museum of Art before Choi Seung-hee's 1930s stage choreography, the 1951 National Gugak Center continuing royal Jangagwon heritage and UNESCO's 2014 Nongak recognition brought the drum into modern life."
                         ),
                     ),
                     (
-                        "Which era or historical manuscript would you like to unpack in detail?",
-                        "Any single date or artifact on that timeline you want to zoom in on?",
-                        "Curious to explore one of those periods closer—Goryeo ceramics, Joseon notation or modern heritage?",
+                        "Which chapter of that thousand-year story would you like me to zoom in on next?",
+                        "Want to step back into one particular court chronicle, celadon kiln or modern revival?",
+                        "Where in that timeline should we linger—Goryeo palaces, Sejong's workshop or 20th-century stages?",
                     ),
                     session=session,
                     separator="\n\n",
@@ -556,9 +718,7 @@ class InferenceEngine:
                     "rule::tech_bokpan",
                     (
                         (
-                            "Two target zones on each drumhead deliver dramatically different acoustics:\n"
-                            "- Bokpan (center): Excitement across the center projects deep fundamental resonance ideal for bass punch and folk power.\n"
-                            "- Byeonjuk (outer rim zone): Suppresses fundamental low overtones to isolate a crisp, high-frequency 'tack' snap, preferred by the right-hand yeolchae in court Jeongak."
+                            "Watch where a drummer aims his stick and you can almost tell without looking whether he learned in a royal palace or a farm festival. Strike dead center on the bokpan and the whole membrane blooms with deep fundamental resonance—perfect for outdoor folk volume. Move the thin bamboo yeolchae out toward the rim edge called byeonjuk, and that heavy fundamental suddenly quiets down, leaving a crisp, dry 'tack' favored in serene court Jeongak."
                         ),
                         (
                             "Striking the center (bokpan) vs. the outer rim (byeonjuk) shifts overtone balance cleanly: bokpan triggers the deep fundamental tone needed in loud folk playing, whereas tapping byeonjuk damps the fundamental so the right-hand yeolchae yields a clean, dry 'tack' prized in refined court Jeongak."
@@ -582,23 +742,13 @@ class InferenceEngine:
                     "rule::tech_strokes",
                     (
                         (
-                            "Traditional janggu drumming rests on five foundational strokes:\n"
-                            "- Deong (덩): Simultaneous strike on both heads anchoring the accent.\n"
-                            "- Gung (궁): Deep bass hit on the left head.\n"
-                            "- Tta (따): Crisp center tap on the right treble skin.\n"
-                            "- Gi-deok (기덕): Rapid two-note grace flam on the treble head.\n"
-                            "- Kkol / Jjak (짝): Cutting rimshot catching outer membrane and wooden hoop."
+                            "Before touching a page of music, every student learns to speak five classic strokes with his hands. Strike both drumheads together on the big downbeat and you hear Deong (덩). Let the left hand carry the low boom alone and it speaks Gung (궁), while a clean tap in the right treble center answers Tta (따). Flick a rapid two-note whip grace ahead of a beat for Gi-deok (기덕), and catch edge skin against wooden hoop for a slicing Kkol or Jjak (짝) rimshot."
                         ),
                         (
                             "Five signature strokes organize janggu phrasing—Deong (덩) striking both heads in unison, Gung (궁) driving left bass, Tta (따) cracking the right center, Gi-deok (기덕) fluttering as a fast treble flam and Kkol / Jjak (짝) snapping sharp against the hoop rim."
                         ),
                         (
-                            "Every complex rhythm breaks down into five basic moves:\n"
-                            "1. Deong (덩): Both heads together.\n"
-                            "2. Gung (궁): Left-head bass stroke.\n"
-                            "3. Tta (따): Right-head center crack.\n"
-                            "4. Gi-deok (기덕): Quick treble flam.\n"
-                            "5. Kkol / Jjak (짝): Piercing edge rimshot."
+                            "Think of traditional phrasing like a five-word spoken language on skin: Deong (덩) unites both heads on major accents, Gung (궁) drops left-side bass, Tta (따) punches crisp treble center strikes, Gi-deok (기덕) spins light grace flams and Kkol / Jjak (짝) cuts bright across the rim."
                         ),
                     ),
                     (
@@ -662,10 +812,8 @@ class InferenceEngine:
                 "rule::ask_acoustics",
                 (
                     (
-                        "Non-linear wave and fluid acoustics shape every note on the janggu:\n"
-                        "- Wave equation & Bessel modes: Circular drumheads follow the 2D polar wave equation with c = sqrt(tau / rho_s) and Bessel functions J_m(k_mn r). Edge-striking byeonjuk suppresses the (0,1) fundamental and excites asymmetric (m >= 1) modes, while high-density cowhide keeps c_left << c_right so heads never phase-align—yielding inharmonic overtones.\n"
-                        "- 3D SLDV & TMM Helmholtz cavity: Non-contact 3D Scanning Laser Doppler Vibrometry (SLDV) reflects lasers off skins to image (1,1)/(2,1) modes and spot misaligned joigae wedges, while Transfer Matrix Modeling computes impedance Z = j*omega*rho_0*L_eff/A ([p1; V1] = T_n T_c [p3; V3]) across chambers (compliance C_a) and jorongmok (inertance L_a).\n"
-                        "- ADSR & directional radiation: Chaepyeon delivers fast Attack/Decay with near-zero Sustain beaming horizontally, whereas bukpyeon radiates omnidirectionally with a prolonged Release."
+                        "Strike either head and the janggu launches an invisible tug-of-war of waves and trapped air. Because its circular drumheads obey the 2D polar wave equation with wave speed c = sqrt(tau / rho_s) and Bessel functions J_m(k_mn r), tapping near the rim (byeonjuk) suppresses the (0,1) fundamental while lifting asymmetric modes (m >= 1)—and because heavy cowhide slows bass waves below thin horsehide (c_left << c_right), the heads never phase-align and instead bloom with inharmonic overtones.\n\n"
+                        "Physicists even bounce non-contact 3D Scanning Laser Doppler Vibrometry (SLDV) beams off vibrating hides to watch (1,1) and (2,1) chaepyeon shapes and spot misaligned joigae wedges. Inside the shell, Transfer Matrix Modeling (TMM, Z = j*omega*rho_0*L_eff/A, [p1; V1] = T_n T_c [p3; V3]) treats the hourglass jorongmok waist as acoustic inertance between chambers—giving chaepyeon fast horizontal Attack/Decay transients beside bukpyeon's omnidirectional prolonged Release."
                     ),
                     (
                         "Physically, the janggu links asymmetric Bessel-function membranes (c = sqrt(tau / rho_s), J_m(k_mn r), keeping c_left << c_right without phase alignment) across a coupled Helmholtz TMM neck (Z = j*omega*rho_0*L_eff/A, [p1; V1] = T_n T_c [p3; V3]). Non-contact 3D SLDV laser vibrometry captures (0,1) bokpan center fundamentals versus higher asymmetric (m >= 1) byeonjuk modes like (1,1)/(2,1) and diagnoses misaligned joigae tension—while chaepyeon snaps fast Attack/Decay horizontally and bukpyeon swells omnidirectionally over a long Release."
@@ -709,10 +857,8 @@ class InferenceEngine:
                     "rule::const_wood_anatomy",
                     (
                         (
-                            "Micro-anatomically, Korean Paulownia coreana delivers rare stiffness per gram for an ambulatory drum:\n"
-                            "- Density & stability: Oven-dry density of 260 to 340 kg/m³ and a tangential-to-radial (T/R) shrinkage ratio of 1.4 to 2.0 resist cracking under cord tension.\n"
-                            "- Porosity & acoustic filtering: Ring-porous earlywood vessels measure 165–289 μm versus 55–149 μm latewood, while internal tyloses block vessels and function as natural low-pass acoustic filters.\n"
-                            "- Tension wood G-fibers: Thick gelatinous fibers reach up to 65.1% crystallinity (~6.5 nm width, 19.9–39.3 MPa compressive strength), letting thin carved walls handle joigae tuning stress—and ring patterns permit dendrochronology dating."
+                            "The story of a fine janggu starts high on a rocky mountain slope long before a chisel ever touches wood. Korean Paulownia coreana grows so light that its oven-dry density sits around 260 to 340 kg/m³ with a steady tangential-to-radial (T/R) shrinkage ratio of 1.4 to 2.0—letting village drummers dance with it strapped to their chest without cracking.\n\n"
+                            "Look through a microscope inside that wood and you see why it sings: wide 165–289 μm earlywood vessels (next to 55–149 μm latewood pores) are partly plugged by tyloses acting like natural low-pass acoustic filters, while thick tension wood gelatinous fibers (G-fibers reaching up to 65.1% crystallinity, ~6.5 nm width and 19.9–39.3 MPa compressive strength) keep the slim hollowed shell from buckling under heavy wedge tension—and let dendrochronology map growth rings back to specific Joseon rainfall decades."
                         ),
                         (
                             "Material science explains why Paulownia coreana dominates hollow ullimtong carving: measuring only 260–340 kg/m³ oven-dry with a stable 1.4–2.0 T/R shrinkage ratio, it contains wide 165–289 μm earlywood vessels (55–149 μm latewood) partly plugged by tyloses acting as low-pass filters. Tension wood G-fibers (~65.1% crystallinity, 6.5 nm crystallites, 19.9–39.3 MPa strength) prevent buckling under high membrane tension, while ring-width mapping anchors dendrochronological dating."
@@ -735,10 +881,8 @@ class InferenceEngine:
                     "rule::const_surface_finish",
                     (
                         (
-                            "Traditional finishing combines crystalline protein adhesives, high-heat surface curing and acoustic carving checks:\n"
-                            "- Adhesives: Artisans apply hot hide glue or sturgeon bladder fish glue (isinglass) around 60°C (140°F)—drying to crystalline hardness unlike viscoelastic synthetic PVA glues that damp kinetic transfer.\n"
-                            "- Surface impedance: Nakdong (iron scorching >1000°C) and ottchil (urushi lacquer) cross-link surface cellulose to cut moisture absorption while forming a reflective layer that boosts cavity Q-factor.\n"
-                            "- Fabrication & wolf tones: Hollowing a 58–66 cm log with graduated walls (thick near the waist, thinner at bearing edges) uses artisan tap-tuning to purge dissonant wolf tones, paired with floating cord hoops to extend decay."
+                            "Step into a traditional drum maker's workshop and you smell fire, urushi tree sap and warming hide glue rather than modern factory resin. While synthetic PVA glues damp kinetic vibrations, masters heat animal hide glue or sturgeon bladder isinglass to a careful 60°C (140°F) so it dries crystalline hard at every joint.\n\n"
+                            "Next, they glide iron heated past 1000°C over the grain in nakdong scorching and coat it with ottchil urushi lacquer—cross-linking cellulose so moisture stays out and cavity waves bounce cleanly to lift the Q-factor. As artisans hollow the 58–66 cm shell thicker around the waist and thinner toward bearing edges, they tap the wood with ear tuned close, carving out harsh wolf tones while letting floating cord-laced hoops extend each stroke's sustain."
                         ),
                         (
                             "Rather than damping synthetic PVA resins, masters bond joints with 60°C (140°F) animal hide glue or sturgeon isinglass (drying crystalline hard) and apply >1000°C nakdong scorching plus ottchil urushi lacquer—cross-linking wood cellulose to lower hygroscopicity and reflect high-frequency cavity waves for higher Q-factor. Graduated wall hollowing (58–66 cm shell) is tap-tuned against asymmetrical wolf tones, with floating joimjul hoops extending sustain."
@@ -801,6 +945,7 @@ class InferenceEngine:
                     session=session,
                     separator=" ",
                 )
+                session.set_pending_offer({"type": "hides_comparison"})
             elif "ullimtong" in entities:
                 selected_facts = [f for f in all_construction if f["id"] in {"F16", "F43"}]
                 reply_text = compose_variation(
@@ -818,6 +963,7 @@ class InferenceEngine:
                     session=session,
                     separator=" ",
                 )
+                session.set_pending_offer({"type": "tuning_or_acoustics"})
             elif "jorongmok" in entities:
                 selected_facts = [f for f in all_construction if f["id"] in {"F03", "F17"}]
                 reply_text = compose_variation(
@@ -835,19 +981,18 @@ class InferenceEngine:
                     session=session,
                     separator=" ",
                 )
+                session.set_pending_offer({"type": "tuning_or_acoustics"})
             elif "gungpyeon" in entities or "chaepyeon" in entities:
                 selected_facts = [f for f in all_construction if f["id"] in {"F02", "F43", "F30"}]
                 reply_text = compose_variation(
                     "rule::const_heads",
                     (
                         (
-                            "The drum's two faces pair deliberate contrasts in skin density, thickness and diameter (symbolizing Yin and Yang):\n"
-                            "- Left head (gungpyeon, usually 36 to 46 cm across): Thick cowhide or deerskin—higher areal mass density slows membrane wave speed for deep bass pitch.\n"
-                            "- Right head (chaepyeon, usually 35 to 45 cm across): Thin horsehide or doghide—tight, light responsiveness for stinging treble crack."
+                            "Korean makers built Yin and Yang right into the drum's two leather faces, turning one frame into two opposite voices. On the left side sits the slightly wider gungpyeon (around 36 to 46 cm across), stretched with thick cowhide or deerskin whose higher areal mass density slows wave travel into a warm, grounded bass boom.\n\n"
+                            "Look across at the slightly smaller right face—the chaepyeon at roughly 35 to 45 cm—and thin horsehide or doghide waits there instead, tightened to snap back with a biting treble crack."
                         ),
                         (
-                            "Traditional janggu skins balance thick bass mass against thin treble snap across opposite sides (36 to 46 cm vs. 35 to 45 cm):\n"
-                            "On the left (gungpyeon), heavy cowhide or deerskin increases areal mass density for warm low resonance; on the right (chaepyeon), thin horsehide or doghide projects crisp treble attacks—embodying harmonic Yin-Yang duality."
+                            "Traditional janggu skins balance thick bass mass against thin treble snap across opposite sides (36 to 46 cm vs. 35 to 45 cm): on the left (gungpyeon), heavy cowhide or deerskin increases areal mass density for warm low resonance, while on the right (chaepyeon), thin horsehide or doghide projects crisp treble attacks—embodying harmonic Yin-Yang duality."
                         ),
                         (
                             "Asymmetric leather selection shapes both sides: the 36 to 46 cm left head (gungpyeon) mounts dense cowhide or deerskin for deep bass wave behavior, whereas the slightly smaller 35 to 45 cm right head (chaepyeon) uses taut horsehide or doghide for bright high-pitched cut."
@@ -861,6 +1006,7 @@ class InferenceEngine:
                     session=session,
                     separator="\n\n",
                 )
+                session.set_pending_offer({"type": "sticks_or_strokes"})
             else:
                 selected_facts = [f for f in all_construction if f["id"] in {"F01", "F02", "F16", "F17", "F18"}]
                 reply_text = compose_variation(
@@ -922,9 +1068,7 @@ class InferenceEngine:
                     "rule::cult_pansori",
                     (
                         (
-                            "In Pansori narrative drama, jangdan patterns supply the rhythmic canvas around vocal sigimsae ornaments and chuimsae interaction:\n"
-                            "- Jajinmori (fast 12/8): Drives urgent battle scenes, including naval clashes in Jeokbyeokga (Song of the Red Cliffs).\n"
-                            "- Jinyangjo (slow 24-beat): Carries profound grief and solemn dramatic weight."
+                            "In a Pansori performance, there is only one singer, one drummer and an unfolded fan—yet the janggu turns that tiny stage into an entire world, cradling vocal sigimsae ornaments and chuimsae shouts. When the story settles into heartbreak, the drummer stretches out into slow 24-beat Jinyangjo to give grief space to breathe; when heroes clash in wartime scenes like the famous naval battle in Jeokbyeokga (Song of the Red Cliffs), his sticks surge straight into fast 12/8 Jajinmori to race along with the fight."
                         ),
                         (
                             "Alongside vocal sigimsae embellishments and chuimsae interjections, Pansori uses specific jangdan grooves to match narrative stakes—notably fast 12/8 Jajinmori for high-intensity battles like Jeokbyeokga's naval conflict, contrasted with unhurried 24-beat Jinyangjo for tragic laments."
@@ -947,10 +1091,8 @@ class InferenceEngine:
                     "rule::cult_nongak_pungmul",
                     (
                         (
-                            "Scholars and sources disagree on whether to call the folk percussion tradition 'nongak' or 'pungmul':\n\n"
-                            "- Institutional records—from An Yu-sin's 1657 text to South Korea's 1966 Asset No. 11 and UNESCO's 2014 listing—officially use 'nongak' (farmers' music).\n"
-                            "- Since the 1980s minjung cultural movement, activists and ethnomusicologists have favored 'pungmul' to foreground shamanic rituals and communal village agency rather than colonial agricultural framing.\n\n"
-                            "In processions, the lead seoljanggu player guides tempo transitions, sangmo hat spinning and solo display."
+                            "Even the name of Korea's village drumming tradition carries a story of disagreement between old books and living protesters. Institutional records—stretching from scholar An Yu-sin's 1657 writing to South Korea's 1966 Cultural Asset No. 11 and UNESCO's 2014 listing—officially call it 'nongak' (farmers' music).\n\n"
+                            "Yet during the 1980s minjung cultural movement, activists and ethnomusicologists pushed back and rallied around 'pungmul' instead, arguing the colonial farming label hid its deeper shamanic rituals and communal spirit. Out in either procession, the lead seoljanggu player still steps to the front, spinning his sangmo hat ribbon while cueing tempo changes and solo runs."
                         ),
                         (
                             "Two terms appear side by side with active debate in Korean scholarship (`nongak` vs. `pungmul`), showing clear disagreement:\n\n"
@@ -988,6 +1130,22 @@ class InferenceEngine:
                     session=session,
                     separator=" ",
                 )
+            elif "jongmyo" in entities:
+                selected_facts = [f for f in self.repository.get_verified_facts() if f["id"] in {"F04", "F06"}]
+                reply_text = compose_variation(
+                    "rule::cult_jongmyo",
+                    (
+                        "Inside royal ancestral shrines during Jongmyo Jeryeak, the janggu steps out of festival exuberance and into stately Neo-Confucian restraint. Musicians sit cross-legged on woven mats, tapping the rim edge gently with the bamboo yeolchae while the bare left palm cushions solemn cowhide bass tones that anchor the ceremonial orchestra.",
+                        "For Jongmyo Jeryeak royal ancestral rites, court Jeongak drummers perform seated with deliberate poise—pairing soft bare-palm bass strokes on the left head with crisp rim taps on the right to honor ancestral formality.",
+                    ),
+                    (
+                        "Want to contrast that solemn ancestral rite with lively countryside Nongak festivals?",
+                        "Curious how the National Gugak Center carries that royal court repertoire forward today?",
+                    ),
+                    session=session,
+                    separator=" ",
+                )
+                session.set_pending_offer({"type": "court_or_folk", "court_done": True})
             else:
                 selected_facts = [f for f in all_cultural if f["id"] in {"F06", "F21", "F28"}]
                 reply_text = compose_variation(

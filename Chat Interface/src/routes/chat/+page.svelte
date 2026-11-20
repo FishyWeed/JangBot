@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '../../lib/api';
 	import DanbiStage from '../../lib/components/DanbiStage.svelte';
+	import ConceptMapDrawer from '../../lib/components/ConceptMapDrawer.svelte';
 	import TopicsDrawer, { type TopicItem } from '../../lib/components/TopicsDrawer.svelte';
 	import {
 		AppShell,
@@ -134,12 +135,14 @@
 
 	// Drawers & confirm UI state
 	let topicsOpen = $state(false);
+	let graphOpen = $state(false);
 	let memoriesOpen = $state(false);
 	let resetConfirmOpen = $state(false);
 	let profileMemories = $state<Array<Record<string, unknown>>>([]);
 
 	function handlePickTopic(prompt: string) {
 		topicsOpen = false;
+		graphOpen = false;
 		sendMessage(prompt);
 	}
 
@@ -356,11 +359,22 @@
 		thinking={isSending}
 		mascotState={speakingId ? 'speaking' : undefined}
 		{topicsOpen}
+		{graphOpen}
 		memoryOpen={memoriesOpen}
 		canReset={!!activeProfile && !isSending && (activeProfile.messages.length > 0)}
 		ontoggletopics={() => {
 			topicsOpen = !topicsOpen;
-			if (topicsOpen) memoriesOpen = false;
+			if (topicsOpen) {
+				graphOpen = false;
+				memoriesOpen = false;
+			}
+		}}
+		ontogglegraph={() => {
+			graphOpen = !graphOpen;
+			if (graphOpen) {
+				topicsOpen = false;
+				memoriesOpen = false;
+			}
 		}}
 		ontogglememory={toggleMemoriesDrawer}
 		onreset={() => {
@@ -411,6 +425,13 @@
 	topics={TOPIC_ITEMS}
 	onpick={handlePickTopic}
 	onclose={() => (topicsOpen = false)}
+/>
+
+<ConceptMapDrawer
+	open={graphOpen}
+	busy={isLoading || isSending || !activeProfile}
+	onask={handlePickTopic}
+	onclose={() => (graphOpen = false)}
 />
 
 {#if memoriesOpen}

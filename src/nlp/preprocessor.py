@@ -90,6 +90,7 @@ class NLPPreprocessor:
         "plants", "metal", "music", "dance", "drums", "shell", "shells", "stick", "sticks",
         "hands", "heads", "tones", "notes", "waves", "walls", "trees", "pores", "crack", "weigh",
         "price", "today", "tempo", "speed", "faster", "slower", "louder", "apply", "protect",
+        "goryeo", "joseon", "silla", "history", "historical", "dates", "timeline", "chronology", "chronological",
     }
 
     def correct_typos(self, text: str, threshold: int = 85) -> str:

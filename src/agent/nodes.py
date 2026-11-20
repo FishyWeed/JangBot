@@ -108,6 +108,13 @@ DOMAIN_KEYWORDS = {
     "440hz", "ajaeng", "piri", "microtonal", "fulcrum", "lever", "sigimsae", "gak", "jeonggan",
     "tanning", "curing", "collagen", "viscoelasticity", "viscoelastic", "ebnf", "subjeonggan", "rubato",
     "wave", "equation", "masculinization", "aak", "1921", "1987", "shaved", "micron",
+    "dog", "doghide", "dogskin", "horse", "horsehide", "cow", "cowhide", "deer", "deerskin",
+    "bamboo", "scorch", "scorched", "scorching", "fire", "flame", "lacquer", "glue",
+    "grid", "notation", "score", "kiln", "stage", "stages", "workshop", "revival",
+    "palace", "palaces", "shaman", "shamanic", "shamanistic", "musok", "gut",
+    "dance", "dances", "dancer", "dancing", "choreography", "choi", "seung-hee", "unesco",
+    "fastest", "slowest", "oldest", "earliest", "physics", "modern", "museum", "museums",
+    "metropolitan", "met", "roka", "jongmyo", "jeryeak", "heritage", "chronicle", "chronicles", "treatises",
     "favorite", "popular", "cool", "interesting", "nice", "awesome", "thanks", "both"
 }
 
@@ -144,7 +151,37 @@ FRAMING_AND_STOPWORDS = {
     "practicing", "fast", "faster", "slow", "slower", "loud", "louder", "soft", "softer", "tempo", "speed",
     "standard", "typical", "real", "exist", "exists", "instead", "rather", "versus",
     "apply", "applies", "biomechanically", "protect", "keep", "kept", "keeps",
-    "bring", "take", "taken", "hold", "behavior",
+    "bring", "take", "taken", "hold", "behavior", "chronological", "chronology", "timeline",
+    "hmm", "hm", "uh", "um", "oh", "ah", "well", "wait", "ok", "okay", "neat", "wow", "whoa",
+    "seriously", "wild", "crazy", "huh", "yep", "yeah", "alright", "gotcha", "basically",
+    "honestly", "anyway", "back", "chapter", "part", "section", "story", "workshop", "stages",
+    "stage", "century", "revival", "kiln", "next", "else", "continue", "again", "relate",
+    "relates", "related", "connect", "connects", "connected",
+    "pretty", "curious", "even", "originally", "came", "come", "comes", "coming", "wondering",
+    "wonder", "hear", "heard", "hearing", "talk", "talking", "chat", "danbi", "friend",
+    "kind", "sort", "bit", "little", "lot", "lots", "super", "totally", "literally", "maybe",
+    "probably", "guess", "suppose", "imagine", "remember", "today", "first", "second", "third",
+    "last", "other", "another", "same", "whole", "entire", "quick", "brief", "deep", "closer",
+    "detail", "details", "example", "examples", "specific", "general", "simply", "mainly",
+    "always", "never", "sometimes", "already", "before", "after", "since", "during", "while",
+    "through", "across", "around", "between", "inside", "outside", "without", "under", "over",
+    "against", "toward", "towards", "regarding", "feel", "feels", "feeling", "look", "looks",
+    "looking", "seem", "seems", "think", "thinking", "start", "started", "starting", "begin",
+    "began", "going", "get", "getting", "got", "let", "lets", "walk", "zoom", "dive", "jump",
+    "switch", "move", "step", "focus", "explore", "listen", "picture", "love", "mind", "sure",
+    "actually", "definitely", "certainly", "apparently", "though", "although", "however",
+    "anyways", "btw", "hey", "hi", "hello", "morning", "afternoon", "evening", "doing",
+    "side", "one", "ones", "two", "three", "both", "either", "neither", "vs", "versus",
+    "history", "historical", "significance", "significant", "important", "importance",
+    "purpose", "function", "overview", "background", "context", "tradition", "traditional",
+    "culture", "cultural", "style", "styles", "type", "types", "form", "forms",
+    "feature", "features", "aspect", "aspects", "character", "characteristic",
+    "characteristics", "concept", "idea", "reason", "reasons", "process", "method",
+    "work", "works", "working", "big", "all", "every", "each", "many", "several", "few",
+    "various", "main", "major", "core", "basic", "key", "top", "summary", "summarize",
+    "recap", "fair", "enough", "check", "checking", "ancient", "old", "older", "early",
+    "earlier", "past", "present", "future", "times", "modern", "beginner", "beginners",
+    "gets", "sore", "tense", "tired", "hurts", "hurt", "ache", "stories", "yes",
 }
 
 # Context adjectives/eras that must not create false DB hits when probing whether a specific gap topic is in janggu.db
@@ -160,6 +197,15 @@ UNVERIFIED_GAP_TERMS = {
     "percent", "percentage", "crack", "cracks", "decibel", "decibels", "spl",
     "currency", "market", "markets", "tax", "taxes", "insadong", "shop", "store",
     "price", "cost", "worth", "salary", "mirrored", "left-handed",
+}
+
+JANGDAN_NAMES = ("jinyangjo", "jungmori", "jungjungmori", "jajinmori", "hwimori", "gutgeori", "eonmori")
+
+COMPOUND_HIDE_PREFIXES = {
+    "dog": ("doghide", "dogskin"),
+    "horse": ("horsehide", "horseskin"),
+    "cow": ("cowhide", "cowskin"),
+    "deer": ("deerskin", "deerhide"),
 }
 
 WEATHER_OR_IDIOM_HINTS = {"weather", "raining", "rain", "snow", "sunny", "temperature", "time", "today", "outside"}
@@ -202,18 +248,37 @@ class JangBotNodes:
         for text in prior_ai:
             if text not in stored_replies:
                 stored_replies.append(text)
-        session.recent_replies = stored_replies[-30:]
+        session.recent_replies = stored_replies[-120:]
         return session
 
     @staticmethod
     def _detect_social(text: str) -> Optional[str]:
-        cleaned = text.lower().strip()
-        greetings = {"hi", "hello", "hey", "yo", "good morning", "good afternoon", "hiya"}
+        cleaned = re.sub(r"[!?.,;:]+", " ", (text or "").lower()).strip()
+        cleaned = re.sub(r"\s+", " ", cleaned)
+        greetings = {
+            "hi", "hello", "hey", "yo", "good morning", "good afternoon", "good evening", "hiya",
+            "hi danbi", "hello danbi", "hey danbi", "yo danbi", "hiya danbi",
+            "hi there", "hello there", "hey there", "how are you", "how are you doing",
+            "how s it going", "hows it going", "what s up", "whats up", "nice to meet you",
+            "good to meet you", "good to see you",
+        }
         if cleaned in greetings:
             return "greeting"
 
         words = cleaned.split()
         if len(words) > 6:
+            return None
+
+        # Never hijack a question, topic pivot or domain query as a pure social mood reply
+        if "?" in (text or ""):
+            return None
+        non_mood_domain = DOMAIN_KEYWORDS - {"cool", "nice", "awesome", "interesting", "favorite", "thanks", "both"}
+        question_or_pivot = {
+            "what", "why", "how", "when", "where", "which", "who", "about", "back",
+            "tell", "explain", "more", "next", "other", "first", "second", "third", "last",
+        }
+        word_set = set(words)
+        if (word_set & non_mood_domain) or (word_set & question_or_pivot):
             return None
 
         mood_positive = ("good", "fine", "great", "well", "doing well", "not bad", "ok", "cool")
@@ -223,6 +288,178 @@ class JangBotNodes:
         mood_negative = ("tired", "exhausted", "stressed", "bad", "not good", "sad")
         if any(re.search(rf"\b{re.escape(m)}\b", cleaned) for m in mood_negative):
             return "mood_negative"
+
+        return None
+
+    @staticmethod
+    def _extract_last_ai_question(state: JangBotState) -> str:
+        """Extract the final question sentence from Danbi's most recent assistant message."""
+        for m in reversed(list(state.get("messages") or [])):
+            if isinstance(m, AIMessage):
+                content = (getattr(m, "content", "") or "").strip()
+                if not content:
+                    continue
+                questions = re.findall(r"[^.!?\n]*\?", content)
+                if questions:
+                    return questions[-1].strip()
+                lines = [
+                    ln.strip()
+                    for ln in content.splitlines()
+                    if ln.strip()
+                    and not ln.strip().startswith(("Beginner tip:", "Starter note:", "Practice reminder", "If you are starting out"))
+                ]
+                return lines[-1] if lines else ""
+        return ""
+
+    @staticmethod
+    def _extract_last_ai_topics(state: JangBotState) -> List[str]:
+        """Extract ordered domain entities/milestones mentioned in Danbi's most recent assistant message."""
+        for m in reversed(list(state.get("messages") or [])):
+            if isinstance(m, AIMessage):
+                low = (getattr(m, "content", "") or "").lower()
+                if not low:
+                    continue
+                candidates = list(SPECIFIC_TERMS) + [
+                    "king yejong", "king sejong", "choi seung-hee", "national gugak center",
+                    "unesco", "paulownia", "cowhide", "horsehide", "doghide", "deerskin",
+                ]
+                found: List[Tuple[int, str]] = []
+                for term in candidates:
+                    pos = low.find(term)
+                    if pos != -1:
+                        found.append((pos, term))
+                found.sort(key=lambda pair: pair[0])
+                ordered: List[str] = []
+                for _, term in found:
+                    if term not in ordered:
+                        ordered.append(term)
+                return ordered
+        return []
+
+    @staticmethod
+    def _extract_question_options(question: str) -> List[str]:
+        """Parse comma/or/dash-delimited topic options offered in Danbi's last question."""
+        if not question:
+            return []
+        q = question.strip().rstrip("?").strip()
+        # Focus on text after em-dash, colon, or lead-in verbs like "between", "about", "like", "into", "on"
+        for sep in ("—", "–", ":"):
+            if sep in q:
+                tail = q.split(sep)[-1].strip()
+                if len(tail.split()) >= 2:
+                    q = tail
+                    break
+        if " or " not in q.lower():
+            return []
+        # Strip trailing framing clauses like "sounds closest to what you want to hear next"
+        q = re.sub(r"\s+(?:sounds|catches|next|first|best|more|today).*$", "", q, flags=re.IGNORECASE).strip()
+        # Strip common question lead-ins when no dash/colon split happened
+        q = re.sub(
+            r"^(?:would you like to|want to|should we|curious|which|where|do you want to|"
+            r"are you asking about|feel free to|we can look at|from here we could)\b.*?\b(?:between|about|into|on|at|explore|compare|cover|hear|linger|zoom in on)\s+",
+            "",
+            q,
+            flags=re.IGNORECASE,
+        ).strip()
+        parts = [p.strip(" ,.-—–") for p in re.split(r",\s*|\s+or\s+", q, flags=re.IGNORECASE) if p.strip(" ,.-—–")]
+        # Trim overlong prefix on the first option if a framing phrase stayed attached
+        cleaned_opts: List[str] = []
+        for idx, part in enumerate(parts):
+            p = re.sub(r"^(?:whether|either|maybe|perhaps|like|such as|how|the)\s+", "", part, flags=re.IGNORECASE).strip()
+            if idx == 0 and len(p.split()) > 6:
+                p = " ".join(p.split()[-4:])
+            if p:
+                cleaned_opts.append(p)
+        return cleaned_opts
+
+    def _resolve_reply_to_last_question(self, raw_query: str, cleaned: str, state: JangBotState) -> Optional[str]:
+        """Resolve ordinals, bare continuations, superlatives and short replies against Danbi's previous turn."""
+        low = re.sub(r"[!?.,;:]+", " ", cleaned.lower()).strip()
+        low = re.sub(r"\s+", " ", low)
+        words = low.split()
+        if not words:
+            return None
+
+        last_q = self._extract_last_ai_question(state)
+        options = self._extract_question_options(last_q)
+        prior_messages = [m for m in (state.get("messages") or [])[:-1] if getattr(m, "content", "")]
+        has_history = bool(prior_messages or state.get("active_topic"))
+
+        # 1. Ordinal selection against options in Danbi's own last question
+        ordinal_map = {
+            "1": 0, "first": 0, "first one": 0, "the first": 0, "the first one": 0, "option 1": 0, "number 1": 0,
+            "2": 1, "second": 1, "second one": 1, "the second": 1, "the second one": 1, "option 2": 1, "number 2": 1,
+            "middle": 1, "middle one": 1, "the middle one": 1,
+            "3": 2, "third": 2, "third one": 2, "the third": 2, "the third one": 2, "option 3": 2, "number 3": 2,
+            "last": -1, "last one": -1, "the last": -1, "the last one": -1,
+        }
+        if low in ordinal_map and has_history:
+            idx = ordinal_map[low]
+            if options:
+                chosen = options[idx] if (-len(options) <= idx < len(options)) else options[-1]
+                return f"tell me about {chosen} on the janggu"
+            topics = self._extract_last_ai_topics(state)
+            if topics:
+                chosen = topics[idx] if (-len(topics) <= idx < len(topics)) else topics[-1]
+                return f"tell me about {chosen} on the janggu"
+            anchor = self._find_recent_anchor(state) or "the janggu"
+            return f"tell me more about {anchor} on the janggu"
+
+        # 2. Superlative / shorthand topic references inside an active conversation
+        if has_history and len(words) <= 7:
+            if any(p in low for p in ("fastest", "fast one", "quickest")):
+                return "tell me about hwimori fast jangdan rhythm on the janggu"
+            if any(p in low for p in ("slowest", "slow one", "calmest")):
+                return "tell me about jinyangjo slow jangdan rhythm on the janggu"
+            if any(p in low for p in ("oldest", "earliest", "very first")):
+                return "tell me about the oldest historical origin yogo and goryeosa records of the janggu"
+            if any(p in low for p in ("left one", "bass one", "thick one", "heavier side", "thick side")):
+                return "tell me about gungpyeon left bass head of the janggu"
+            if any(p in low for p in ("right one", "treble one", "thin one", "thin side")):
+                return "tell me about chaepyeon right treble head of the janggu"
+            if any(p in low for p in ("other side", "other head", "opposite side", "opposite head")):
+                prior_entities = state.get("last_entities") or {}
+                if "gungpyeon" in prior_entities and "chaepyeon" not in prior_entities:
+                    return "tell me about chaepyeon right head of the janggu"
+                if "chaepyeon" in prior_entities and "gungpyeon" not in prior_entities:
+                    return "tell me about gungpyeon left head of the janggu"
+                return "compare gungpyeon and chaepyeon drumheads on the janggu"
+
+        # 3. Bare affirmation / continuation when pending_offer was None
+        bare_continue = {
+            "yes", "yeah", "yep", "yup", "sure", "ok", "okay", "please", "yes please",
+            "sure thing", "sounds good", "go on", "go ahead", "continue", "keep going",
+            "tell me", "tell me more", "more", "both", "either", "why", "how", "and",
+            "really", "wait why", "wait really", "what else", "tell me about that",
+            "more about that", "elaborate", "explain", "explain more",
+        }
+        if has_history and low in bare_continue:
+            if options:
+                return f"tell me about {options[0]} on the janggu"
+            if last_q and not any(p in last_q.lower() for p in ("clarify which aspect", "be a bit more specific", "narrow that down")):
+                q_clean = re.sub(
+                    r"^(?:want to|would you like to|should we|curious|ready to|do you want to|where|which)\b[^a-z]*",
+                    "",
+                    last_q.rstrip("?").strip(),
+                    flags=re.IGNORECASE,
+                ).strip()
+                if q_clean and len(q_clean.split()) >= 2:
+                    return f"tell me about {q_clean} on the janggu"
+            anchor = self._find_recent_anchor(state) or "the janggu"
+            if low in {"why", "wait why"}:
+                return f"why is {anchor} designed or used that way on the janggu"
+            if low == "how":
+                return f"how does {anchor} work on the janggu"
+            return f"tell me more about {anchor} on the janggu"
+
+        # 4. Mid-conversation short continuation fragments ("what about X?", "and X?", "how about X?", "back to X")
+        weather_or_off = WEATHER_OR_IDIOM_HINTS | NON_JANGGU_INSTRUMENTS
+        if has_history and len(words) <= 6 and not (set(words) & weather_or_off):
+            m = re.match(r"^(?:(?:hmm|hm|uh|um|oh|ah|well|wait|ok|okay|cool|nice|neat|so)\s+)*(?:what about|how about|and what about|and|back to|more on|more about)\s+(.+)$", low)
+            if m:
+                frag = m.group(1).strip()
+                if frag and "janggu" not in frag and "drum" not in frag:
+                    return f"tell me about {frag} for the janggu"
 
         return None
 
@@ -241,9 +478,14 @@ class JangBotNodes:
                 if re.search(rf"\b{re.escape(term)}\b", low):
                     return term
 
+        internal_bucket_keys = {
+            "janggu", "yogo", "archaeology", "wood_anatomy", "surface_finish",
+            "acoustics_physics", "ml_dsp", "conservation", "microtonal_tuning",
+            "hide_curing", "ebnf_grammar", "nongak_pungmul", "synthetic", "hornbostel",
+        }
         last_entities = state.get("last_entities") or {}
         for key in last_entities:
-            if key not in {"janggu", "yogo"}:
+            if key not in internal_bucket_keys:
                 return key
 
         # If prior context already established janggu (or generic history), resolve pronoun to "the janggu"
@@ -278,11 +520,16 @@ class JangBotNodes:
         is_meta_citation = any(
             p in cleaned for p in ("how do you know", "source", "sources", "cite", "citation", "where did you", "prove")
         )
-        if FollowUpHandler.can_handle(raw_query, session_proxy) or self._detect_social(cleaned) or is_meta_citation:
+        if FollowUpHandler.can_handle(raw_query, session_proxy) or self._detect_social(raw_query) or is_meta_citation:
             return {"cleaned_query": cleaned, "resolved_query": cleaned}
 
         resolved = cleaned
         low = cleaned.lower()
+
+        # Dynamic resolution of ordinals, bare continuations, superlatives and short fragments against Danbi's last question
+        last_q_resolved = self._resolve_reply_to_last_question(raw_query, cleaned, state)
+        if last_q_resolved:
+            return {"cleaned_query": cleaned, "resolved_query": last_q_resolved}
 
         # Complementary side resolution (e.g., "the other side" after gungpyeon -> chaepyeon)
         prior_entities = state.get("last_entities") or {}
@@ -293,14 +540,29 @@ class JangBotNodes:
                 resolved = re.sub(r"\b(?:the )?(?:other|opposite) (?:side|head)\b", "gungpyeon", low)
 
         # Pronoun / deictic resolution against recent entity anchor or implicit janggu subject
-        has_pronoun = bool(re.search(r"\b(it|that|this|they|them|those)\b", resolved))
-        is_elliptic_followup = len(resolved.split()) <= 6 and any(
-            w in resolved.split() for w in ["faster", "slower", "louder", "softer", "technique", "practice", "why", "more"]
+        has_pronoun = bool(re.search(r"\b(it|its|that|this|they|them|those)\b", resolved))
+        self_contained_beginner = bool(
+            set(resolved.split()) & {"beginner", "beginners", "difficulty", "difficult", "learn", "learning"}
+        )
+        explicit_concepts = [
+            c for c in self.toolchain.semantic_network.extract_concepts_from_text(resolved) if c != "janggu"
+        ]
+        is_elliptic_followup = (
+            not self_contained_beginner
+            and not explicit_concepts
+            and len(resolved.split()) <= 6
+            and any(
+                w in resolved.split()
+                for w in [
+                    "faster", "slower", "louder", "softer", "technique", "practice", "why", "more",
+                    "how", "when", "where", "heavier", "lighter", "bigger", "smaller", "compare", "difference",
+                ]
+            )
         )
         asks_about_it_usage = (
-            bool(re.search(r"\bit\b", resolved))
+            bool(re.search(r"\b(it|its)\b", resolved))
             and not (set(resolved.split()) & WEATHER_OR_IDIOM_HINTS)
-            and any(p in resolved for p in ("used in", "used for", "made of", "made from", "invented", "created", "play", "tune", "weigh", "cost", "sound", "called"))
+            and any(p in resolved for p in ("used in", "used for", "made of", "made from", "invented", "created", "play", "tune", "weigh", "cost", "sound", "called", "name"))
         )
 
         if has_pronoun or is_elliptic_followup:
@@ -310,22 +572,35 @@ class JangBotNodes:
             if anchor:
                 if has_pronoun:
                     rewritten = re.sub(r"\b(that|this|they|them|those)\b", anchor, resolved)
+                    rewritten = re.sub(r"\bits\b", f"{anchor}'s", rewritten)
                     rewritten = re.sub(r"\bit\b", anchor, rewritten)
                     resolved = rewritten
                 elif anchor not in resolved:
                     resolved = f"{resolved} {anchor}"
 
-        # Optional LLM coreference polish when credentials are configured
-        if self.llm.is_available and (has_pronoun or is_elliptic_followup):
+        # Optional LLM coreference polish when credentials are configured (skip if query already names an explicit entity without pronouns)
+        _, direct_entities = self.nlp.map_synonyms(self.nlp.correct_typos(resolved))
+        raw_tokens_check = set(re.findall(r"[a-zA-Z0-9\uAC00-\uD7A3-]+", cleaned.lower()))
+        is_explicit_off = bool(raw_tokens_check & (NON_JANGGU_INSTRUMENTS | WEATHER_OR_IDIOM_HINTS)) and not bool(
+            raw_tokens_check & {"janggu", "janggo", "changgo", "장구"}
+        )
+        is_short_conversational = (
+            not is_explicit_off
+            and not direct_entities
+            and len(resolved.split()) <= 6
+            and bool((state.get("messages") or [])[:-1])
+        )
+        if self.llm.is_available and (has_pronoun or (is_elliptic_followup and not direct_entities) or is_short_conversational):
             recent_lines = []
             for m in (state.get("messages") or [])[-5:-1]:
                 role = "User" if isinstance(m, HumanMessage) else "Danbi"
-                recent_lines.append(f"{role}: {m.content[:180]}")
+                recent_lines.append(f"{role}: {m.content[:220]}")
             if recent_lines:
                 llm_rewritten = self.llm.complete(
                     system_prompt=(
-                        "Rewrite the latest user message into a standalone query by resolving pronouns or missing references "
-                        "using the prior turns. Keep it concise. Never change topic or invent facts. If already clear or off-topic, return it unchanged."
+                        "Rewrite the latest user message into a standalone query by resolving pronouns, fragments or choices "
+                        "referencing Danbi's previous question. Keep it concise. Never invent facts. "
+                        "If the user is clearly changing to an unrelated off-topic subject (like weather, food, sports, coding or another non-janggu instrument), return it unchanged."
                     ),
                     user_prompt="History:\n" + "\n".join(recent_lines) + f"\n\nLatest query: {raw_query}",
                     max_tokens=80,
@@ -375,7 +650,7 @@ class JangBotNodes:
             }
 
         # 2. Social greeting and mood
-        social_type = self._detect_social(cleaned)
+        social_type = self._detect_social(raw_query)
         if social_type == "greeting":
             greeting_reply = pick_greeting(config["bot"]["name"], session=session_proxy)
             return {
@@ -472,6 +747,22 @@ class JangBotNodes:
         # 3. Typo correction, synonym mapping, intent prediction
         corrected = self.nlp.correct_typos(resolved)
         canonical, entities = self.nlp.map_synonyms(corrected)
+        corr_low = corrected.lower()
+        for j_name in JANGDAN_NAMES:
+            if re.search(rf"\b{j_name}\b", corr_low):
+                entities[j_name] = j_name
+        if "choi seung" in corr_low or "seung-hee" in corr_low:
+            entities["choi_seung_hee"] = "choi_seung_hee"
+        if "national gugak center" in corr_low or "jangagwon" in corr_low:
+            entities["ngc_jangagwon"] = "ngc_jangagwon"
+        if "met museum" in corr_low or "the met" in corr_low or "metropolitan museum" in corr_low:
+            entities["met_museum"] = "met_museum"
+        if "unesco" in corr_low:
+            entities["unesco"] = "unesco"
+        if "galgo" in corr_low:
+            entities["galgo"] = "galgo"
+        if "jongmyo" in corr_low or "jeryeak" in corr_low:
+            entities["jongmyo"] = "jongmyo"
         intent, confidence = self.classifier.predict(canonical)
 
         conf_threshold = config["nlp"]["confidence_threshold"]
@@ -492,7 +783,7 @@ class JangBotNodes:
                 entities.pop("nongak_pungmul", None)
                 intent = "ask_playing_technique"
                 confidence = max(confidence, 0.85)
-        elif "national gugak center" in canonical or "jangagwon" in canonical or "galgo" in canon_tokens:
+        elif "national gugak center" in canonical or "jangagwon" in canonical or "galgo" in canon_tokens or "met_museum" in entities or "choi_seung_hee" in entities:
             intent = "ask_chronology"
             confidence = max(confidence, 0.85)
         elif "bokpan" in entities and not (canon_tokens & {"sldv", "helmholtz", "tmm", "adsr", "vibrometry"}):
@@ -517,14 +808,17 @@ class JangBotNodes:
             else:
                 intent = "ask_cultural_significance"
             confidence = max(confidence, 0.85)
-        elif "pansori" in entities or (canon_tokens & {"shaman", "shamanic", "shamanistic", "musok", "gut"}):
+        elif "pansori" in entities or "jongmyo" in entities or (canon_tokens & {"shaman", "shamanic", "shamanistic", "musok", "gut"}):
             intent = "ask_cultural_significance"
             confidence = max(confidence, 0.85)
         else:
             override_applied = False
 
         # Align intent using recognized entities and active context when no specific override applied
-        if not override_applied and entities and (confidence < conf_threshold or state.get("active_topic")):
+        strong_structural = {"joigae", "joimjul", "ullimtong", "jorongmok", "gungpyeon", "chaepyeon", "chuimsae", "sajanggu"}
+        if not override_applied and entities and (
+            confidence < conf_threshold or state.get("active_topic") or bool(set(entities) & strong_structural)
+        ):
             for ent_key in entities:
                 if ent_key in ENTITY_INTENT_MAP:
                     mapped = ENTITY_INTENT_MAP[ent_key]
@@ -544,9 +838,25 @@ class JangBotNodes:
         if "jangdan" in entities and any(w in canon_tokens for w in ["faster", "tempo", "speed", "play", "practice", "walking"]):
             intent = "ask_cultural_significance"
             confidence = max(confidence, 0.85)
+        has_explicit_jangdan_name = any(j in raw_query.lower() for j in JANGDAN_NAMES)
+        if canon_tokens & {"beginner", "beginners", "difficulty", "difficult"} and intent != "ask_playing_technique" and not has_explicit_jangdan_name:
+            intent = "ask_difficulty"
+            confidence = max(confidence, 0.85)
+        if ("popular" in canon_tokens or "popularity" in canon_tokens) and not (
+            set(entities) & {"ijanggu", "synthetic", "ml_dsp", "conservation", "ebnf_grammar"}
+        ):
+            intent = "ask_modern_popularity"
+            confidence = max(confidence, 0.85)
+        if "favorite" in canon_tokens and not (
+            set(entities) & {"ijanggu", "synthetic", "ml_dsp", "conservation", "ebnf_grammar"}
+        ):
+            intent = "ask_favorite"
+            confidence = max(confidence, 0.85)
 
         tokens = set(canonical.split())
         has_domain_kw = bool(tokens & DOMAIN_KEYWORDS)
+        semnet_concepts = self.toolchain.semantic_network.extract_concepts_from_text(resolved)
+        has_semnet_concepts = bool([c for c in semnet_concepts if c != "janggu"])
         in_domain_intents = {
             "ask_origin", "ask_etymology", "ask_evolution", "ask_military_role",
             "ask_construction", "ask_playing_technique", "ask_rhythm",
@@ -557,8 +867,25 @@ class JangBotNodes:
         has_janggu_context = (
             bool(entities)
             or has_domain_kw
+            or has_semnet_concepts
             or (intent in in_domain_intents and confidence >= 0.62)
         )
+        if has_semnet_concepts and len([c for c in semnet_concepts if c != "janggu"]) >= 2 and intent != "off_topic":
+            confidence = max(confidence, conf_threshold)
+
+        # Accept clear appreciative reactions & concise domain-keyword fragments without bouncing to clarification
+        ack_words = {"thanks", "thank", "neat", "cool", "awesome", "interesting", "wow", "whoa", "gotcha", "makes", "sense", "nice", "lovely", "fascinating"}
+        if (
+            (intent == "conversational_acknowledgment" or ("thanks" in tokens or "thank" in tokens))
+            and "?" not in raw_query
+            and not entities
+            and len(cleaned.split()) <= 10
+            and (tokens & ack_words)
+        ):
+            intent = "conversational_acknowledgment"
+            confidence = max(confidence, conf_threshold)
+        elif has_domain_kw and confidence >= clarification_threshold and len(tokens) <= 4:
+            confidence = max(confidence, conf_threshold)
 
         # 4. Deterministic routing
         if intent == "off_topic" or not has_janggu_context:
@@ -642,6 +969,8 @@ class JangBotNodes:
     def _term_in_word_set(self, tok: str, words: set) -> bool:
         """Check word-level equality or stem equivalence without substring false positives."""
         if tok in words or f"{tok}s" in words:
+            return True
+        if tok in COMPOUND_HIDE_PREFIXES and any(alias in words for alias in COMPOUND_HIDE_PREFIXES[tok]):
             return True
         norm_tok = self._norm_stem(tok)
         if any(self._norm_stem(w) == norm_tok for w in words):
@@ -762,55 +1091,93 @@ class JangBotNodes:
 
         fact_summaries = " ".join(f["statement"] for f in matched_facts)
         documented_roles = all_by_id["F06"]["statement"] if wants_f06 and "F06" in all_by_id else ""
-        extra_role_line = f"- {documented_roles}\n\n" if documented_roles and "F06" not in {f["id"] for f in matched_facts} else "\n"
+        extra_role_para = (
+            f"\n\nIn the wider story of Korean music, {documented_roles[0].lower()}{documented_roles[1:]}"
+            if documented_roles and "F06" not in {f["id"] for f in matched_facts}
+            else ""
+        )
 
         if still_missing:
             missing_list = ", ".join(still_missing[:3])
             lead = pick_variation(
                 "gap::partial_lead",
                 (
-                    f"My verified sources do not specifically document {missing_list} for the janggu.\n\n",
-                    f"While I couldn't find verified evidence covering {missing_list} directly, here is what is documented:\n\n",
-                    f"There are no verified details on {missing_list} in the database yet—here is what the sources do confirm:\n\n",
+                    f"My verified sources don't actually tell a story about {missing_list} on the janggu—though here is what history does preserve. ",
+                    f"While our records stay silent on {missing_list} directly, the documented story that surrounds it is worth hearing. ",
+                    f"Nothing verified in my notes covers {missing_list} yet, so I won't guess—instead, here is what the sources actually show. ",
                 ),
                 session=session,
             )
         else:
-            lead = ""
-
-        records_header = (
-            ""
-            if "here is what" in lead.lower()
-            else pick_variation(
-                "gap::verified_header",
+            lead = pick_variation(
+                "gap::verified_story_lead",
                 (
-                    "Here is what the verified sources document:\n",
-                    "Based on verified records in the database:\n",
-                    "Here is what verified literature confirms on that topic:\n",
-                    "Documented sources establish the following points:\n",
+                    "Looking at what historical and organological records tell us, ",
+                    "Here is the story those verified accounts preserve: ",
+                    "Tracing that detail through the verified archives, ",
                 ),
                 session=session,
             )
-        )
-        closing_q = pick_variation(
-            "gap::closing",
-            (
-                "Want to examine any of those documented musical roles or rhythmic cycles closer?",
-                "Should we look deeper into its traditional performance contexts or jangdan patterns?",
-                "Curious to follow up on court music versus village folk roles from here?",
-                "Which side of those documented roles would you like to hear more about?",
+
+        cat = matched_facts[0].get("category") or "general"
+        offer_by_cat = {
+            "construction": {"type": "tuning_or_acoustics"},
+            "acoustics": {"type": "tuning_or_acoustics"},
+            "technique": {"type": "sticks_or_strokes"},
+            "rhythm": {"type": "slow_or_fast_rhythms"},
+            "cultural_use": {"type": "court_or_folk"},
+            "history": {"type": "silla_evolution"},
+            "origin": {"type": "court_or_folk"},
+        }
+        closing_by_cat = {
+            "construction": (
+                "Want to look at how the cords and leather wedges tune the drumheads, or dive into the acoustic choke inside the waist?",
+                "Should we move from the physical craft into mechanical tuning wedges or cavity acoustics next?",
             ),
-            session=session,
+            "acoustics": (
+                "Want to see how the tuning wedges shift those frequencies, or inspect how the wood shell is built?",
+                "Curious how sliding joigae wedges tighten those hides, or how the jorongmok waist filters the sound?",
+            ),
+            "technique": (
+                "Want to compare the bamboo yeolchae and mallet sticks, or hear how the five named strokes work?",
+                "Should we break down the two sticks next, or walk through the five signature strokes?",
+            ),
+            "rhythm": (
+                "Want to feel the contrast between slow 24-beat Jinyangjo and blazing 4-beat Hwimori?",
+                "Should we slow down into tragic Jinyangjo or sprint into festival Hwimori next?",
+            ),
+        }
+        closing_pool = closing_by_cat.get(
+            cat,
+            (
+                "Want to pull on another thread from that story—maybe royal court ceremonies versus village folk festivals?",
+                "Should we follow how that connects to court Jeongak or lively folk drumming next?",
+                "Curious to trace royal court traditions versus countryside festivals from here?",
+                "Where should we wander next in the story of the janggu?",
+            ),
         )
-        baseline = f"{lead}{records_header}- {fact_summaries}\n{extra_role_line}{closing_q}"
+        closing_q = pick_variation(f"gap::closing::{cat}", closing_pool, session=session)
+        body_text = fact_summaries
+        if lead.endswith(", ") and len(body_text) > 1 and body_text[0].isupper():
+            first_word = re.match(r"([A-Za-z]+)", body_text)
+            keep_cap = {
+                "Jeongganbo", "King", "Goryeo", "Goryeosa", "Joseon", "Silla", "Korean",
+                "Korea", "Paulownia", "UNESCO", "KAIST", "SLDV", "MelCNN", "MERT", "FDTD",
+                "DWM", "FAUST", "CFL", "EBNF", "Bessel", "Helmholtz", "Transfer", "Akhak",
+                "Seong", "Choi", "National", "Nongak", "Pungmul", "Pansori", "Jeongak",
+                "Samulnori", "Seoljanggu", "Daechwita", "Hornbostel", "Synchrotron", "Jongmyo",
+            }
+            if first_word and first_word.group(1) not in keep_cap:
+                body_text = body_text[0].lower() + body_text[1:]
+        baseline = f"{lead}{body_text}{extra_role_para}\n\n{closing_q}"
         return {
             "facts": relevant_facts,
             "citations": citations,
             "fact_ids": [f["id"] for f in relevant_facts],
             "baseline_text": baseline,
             "status": "answered",
-            "active_topic": matched_facts[0].get("category") or "general",
-            "pending_offer": {"type": "court_or_folk"},
+            "active_topic": cat,
+            "pending_offer": offer_by_cat.get(cat, {"type": "general_followup"}),
         }
 
     def execute_tools(self, state: JangBotState) -> Dict[str, Any]:
@@ -834,9 +1201,29 @@ class JangBotNodes:
                 "recent_replies": session_proxy.recent_replies,
             }
 
+        # Multi-hop verified semantic network traversal for explicit relational/chained queries
+        query_tokens_low = set(re.findall(r"[a-z0-9-]+", resolved_query.lower()))
+        if not (query_tokens_low & UNVERIFIED_GAP_TERMS):
+            rel_res = self.toolchain.answer_relational_query_sync(resolved_query)
+            if rel_res and rel_res.get("found") and rel_res.get("hop_count", 0) >= 2 and rel_res.get("fact_ids"):
+                story = self.toolchain.semantic_network.render_path_story(rel_res, session=session_proxy)
+                return {
+                    "retrieved_facts": rel_res["facts"],
+                    "citations": rel_res["citations"],
+                    "baseline_reply": story,
+                    "response_status": "answered",
+                    "active_topic": rel_res["target"].get("category") or "general",
+                    "last_fact_ids": rel_res["fact_ids"],
+                    "last_entities": entities or {rel_res["target"]["id"]: rel_res["target"]["id"]},
+                    "pending_offer": None,
+                    "used_variants": session_proxy.used_variants,
+                    "recent_replies": session_proxy.recent_replies,
+                }
+
         eval_result = self.toolchain.evaluate_rules_sync(intent or "", entities, confidence, session_proxy)
         facts = eval_result["facts"]
         citations = eval_result["citations"]
+        baseline_text = eval_result["baseline_text"]
 
         # Check whether canned template leaves the user's actual core topic unaddressed
         gap_override = self._assess_and_build_gap_response(
@@ -844,7 +1231,7 @@ class JangBotNodes:
             intent=intent,
             entities=entities,
             eval_facts=facts,
-            baseline_text=eval_result["baseline_text"],
+            baseline_text=baseline_text,
             session=session_proxy,
         )
         if gap_override is not None:
@@ -861,6 +1248,22 @@ class JangBotNodes:
                 "recent_replies": session_proxy.recent_replies,
             }
 
+        # Supplement with dynamic graph-neighbor follow-up when a concise reply has no closing invitation
+        if (
+            eval_result["status"] == "answered"
+            and not session_proxy.pending_offer
+            and baseline_text
+            and not baseline_text.rstrip().endswith("?")
+        ):
+            active_concepts = self.toolchain.semantic_network.extract_concepts_from_text(resolved_query)
+            if not active_concepts:
+                active_concepts = [k for k in entities.keys() if self.toolchain.semantic_network.resolve_concept(k)]
+            neighbors = self.toolchain.suggest_graph_followups_sync(active_concepts, limit=2)
+            if len(neighbors) >= 2:
+                baseline_text = f"{baseline_text}\n\nWant to follow a connected thread next—{neighbors[0]['label']} or {neighbors[1]['label']}?"
+            elif len(neighbors) == 1:
+                baseline_text = f"{baseline_text}\n\nCurious to explore {neighbors[0]['label']} next?"
+
         # Supplement with keyword search from janggu.db when useful
         extra_facts = self.toolchain.search_facts_sync(resolved_query, limit=3)
         seen_ids = {f["id"] for f in facts}
@@ -872,7 +1275,7 @@ class JangBotNodes:
         return {
             "retrieved_facts": facts,
             "citations": citations,
-            "baseline_reply": eval_result["baseline_text"],
+            "baseline_reply": baseline_text,
             "response_status": eval_result["status"],
             "active_topic": session_proxy.active_topic,
             "last_fact_ids": eval_result["fact_ids"] or session_proxy.last_fact_ids,
@@ -1077,7 +1480,8 @@ class JangBotNodes:
         ) or "- None recorded yet."
         baseline = state.get("baseline_reply", "")
 
-        recent_replies = list(session.recent_replies if session is not None else [])[-6:]
+        all_recent = list(session.recent_replies if session is not None else [])
+        recent_replies = all_recent[-12:]
         recent_block = (
             "\n".join(f"- {r.splitlines()[0][:140]}" for r in recent_replies)
             if recent_replies
@@ -1085,33 +1489,55 @@ class JangBotNodes:
         )
         banned_list = ", ".join(f'"{b}"' for b in BANNED_PHRASES)
 
+        convo_lines = []
+        for m in (state.get("messages") or [])[-5:-1]:
+            role = "User" if isinstance(m, HumanMessage) else config["bot"]["name"]
+            convo_lines.append(f"{role}: {(getattr(m, 'content', '') or '')[:220]}")
+        convo_block = "\n".join(convo_lines) if convo_lines else "- Start of conversation."
+
         offer = state.get("pending_offer") or {}
         offer_hint = ""
         if offer.get("type"):
             offer_hint = (
-                f"Active follow-up topic ({offer['type']}): end with a short, fresh closing invitation aligned with the offer "
-                "implied in the Reference Draft so a brief reply like 'yes' or 'both' still makes natural sense."
+                f"Active follow-up topic ({offer['type']}): end with a short, fresh closing question aligned with the offer "
+                "implied in the Reference Draft so a brief reply like 'yes', 'the first one', 'the second one' or 'both' still makes natural sense."
             )
 
         style_angles = (
-            "Open directly with the concrete historical or physical fact rather than filler exclamation.",
-            "Contrast two sides right in the first sentence, then organize concise bullet highlights if helpful.",
-            "Start with how the player experiences it physically or aurally, then connect the verified context.",
-            "Use tight, matter-of-fact prose—two crisp paragraphs with a fresh closing question.",
+            "Tell this as a vivid, continuous story—set the historical or physical scene first and let each fact unfold naturally in narrative flow.",
+            "Narrate from a performer's or craftsperson's perspective—what his hands feel, what listeners hear and how the moment carries forward.",
+            "Weave the chronology or mechanics like a living tale handed down across royal halls, artisan workshops and village yards.",
+            "Begin with a striking scene or contrast between two worlds, then trace the story seamlessly across 2 to 3 natural paragraphs.",
+            "Respond directly to the user's curiosity with conversational warmth first, then unfold the verified facts like a campfire story.",
+            "Zoom into one tactile detail—a wood grain, a leather knot, a stick rebound or a sudden beat—and widen outward into the full picture.",
+            "Frame the answer as an unfolding journey from problem to craft solution, keeping the rhythm of prose brisk and engaging.",
+            "Contrast how it looks to an onlooker versus how it feels to the musician or artisan inside the tradition.",
         )
         turn_idx = int(state.get("conversation_turn") or 0)
         chosen_style = style_angles[turn_idx % len(style_angles)]
 
+        prefers_story = bool(config.get("bot", {}).get("persona", {}).get("prefers_storytelling", True))
+        story_rule = (
+            "2. PERSONALITY (Storyteller, he/him): Danbi loves explaining through engaging, vivid stories rather than dry encyclopedia bullet lists. "
+            "NEVER dump bulleted timelines or dash-separated fact lists (e.g., '- 1076 AD: ... - 1114 AD: ...'). "
+            "Always weave verified dates, craftsmen, instruments and scenes into smooth storytelling paragraphs and acknowledge the user's previous turn naturally.\n"
+            if prefers_story
+            else "2. Present verified claims clearly and naturally.\n"
+        )
+
         system_prompt = (
-            f"You are {config['bot']['name']}, a knowledgeable Korean janggu tutor.\n"
+            f"You are {config['bot']['name']} ({config.get('bot', {}).get('pronouns', 'he/him')}), a warm Korean janggu tutor and passionate traditional storyteller.\n"
             "STRICT RULES:\n"
-            "1. Use ONLY claims present in Verified Facts and Reference Draft below. Never invent dates, dimensions, Korean terms or citations.\n"
-            "2. NEVER repeat openings, transition sentences, structures or closing questions from Recent Replies below.\n"
-            f"3. NEVER use any of these banned stock clichés: {banned_list}.\n"
-            f"4. Style direction for THIS turn: {chosen_style}\n"
-            "5. Adapt encouragement and practice tips to Learner Memories (skill level, instrument, practicing jangdan, wrist tension)."
+            "1. Ground EVERY detail strictly in Verified Facts and Reference Draft below—never invent dates, dimensions, characters, Korean terms or citations.\n"
+            f"{story_rule}"
+            "3. NEVER repeat openings, transition sentences, structures or closing questions from Recent Replies below.\n"
+            f"4. NEVER use any of these banned stock clichés: {banned_list}.\n"
+            f"5. Story direction for THIS turn: {chosen_style}\n"
+            "6. Keep your reply tight and complete (2 short paragraphs plus 1 crisp closing question, roughly 110–190 words total) so it never gets cut off mid-sentence.\n"
+            "7. Only weave in Learner Memories (skill level, practicing jangdan, wrist tension) when directly relevant to playing or practice."
         )
         user_prompt = (
+            f"Recent Conversation:\n{convo_block}\n\n"
             f"User query: {state.get('raw_query')}\n"
             f"Resolved query: {state.get('resolved_query')}\n"
             f"Learner Memories:\n{mem_block}\n\n"
@@ -1126,17 +1552,17 @@ class JangBotNodes:
         reply = self.llm.complete(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            max_tokens=420,
+            max_tokens=650,
             temperature=synth_temp,
         )
-        if reply and is_repetitive(reply, recent_replies):
+        if reply and is_repetitive(reply, all_recent):
             retry = self.llm.complete(
                 system_prompt=system_prompt + "\nIMPORTANT: Your previous draft echoed an earlier opening; rewrite using a completely fresh first sentence and closing.",
                 user_prompt=user_prompt,
-                max_tokens=420,
+                max_tokens=650,
                 temperature=min(synth_temp + 0.15, 0.9),
             )
-            if retry and not is_repetitive(retry, recent_replies):
+            if retry and not is_repetitive(retry, all_recent):
                 return retry
         return reply
 

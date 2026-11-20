@@ -1,4 +1,12 @@
-import type { BotConfig, ChatMessage, ChatProfile, ChatProfileSummary } from './types';
+import type {
+	BotConfig,
+	ChatMessage,
+	ChatProfile,
+	ChatProfileSummary,
+	ConceptNodeDetails,
+	SemanticGraphOverview,
+	SemanticPathResult
+} from './types';
 
 const DEVICE_STORAGE_KEY = 'jangbot_device_id';
 
@@ -94,5 +102,31 @@ export const api = {
 			`/api/memories/${encodeURIComponent(userId)}`
 		);
 		return data.memories;
+	},
+
+	getGraph(params?: {
+		node_type?: string;
+		predicate?: string;
+		category?: string;
+	}): Promise<SemanticGraphOverview> {
+		const qs = new URLSearchParams();
+		if (params?.node_type) qs.set('node_type', params.node_type);
+		if (params?.predicate) qs.set('predicate', params.predicate);
+		if (params?.category) qs.set('category', params.category);
+		const suffix = qs.toString() ? `?${qs.toString()}` : '';
+		return request<SemanticGraphOverview>(`/api/graph${suffix}`);
+	},
+
+	getGraphNode(concept: string): Promise<ConceptNodeDetails> {
+		return request<ConceptNodeDetails>(`/api/graph/node/${encodeURIComponent(concept)}`);
+	},
+
+	getGraphPath(fromConcept: string, toConcept: string, maxHops = 5): Promise<SemanticPathResult> {
+		const qs = new URLSearchParams({
+			from: fromConcept,
+			to: toConcept,
+			max_hops: String(maxHops)
+		});
+		return request<SemanticPathResult>(`/api/graph/path?${qs.toString()}`);
 	}
 };

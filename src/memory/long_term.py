@@ -3,6 +3,8 @@
 import os
 import re
 import sqlite3
+import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from src.settings import config
@@ -275,14 +277,22 @@ class LongTermMemoryManager:
                     if mem_id:
                         results.append({"id": mem_id, "memory": fact, "slot": slot, "source": "local_slot"})
 
-        # When Mem0 + LLM backend is active (and not in timeout cooldown), run Mem0's semantic extraction
+        # When Mem0 + LLM backend is active (and not in timeout cooldown), run Mem0's semantic extraction with a strict timeout
         if self._mem0 is not None and not getattr(self.llm_client, "in_cooldown", False):
+            executor = getattr(self, "_mem0_executor", None)
+            if executor is None:
+                executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="mem0-add")
+                self._mem0_executor = executor
             try:
-                mem0_resp = self._mem0.add(messages, user_id=user_id, metadata=metadata or {})
+                future = executor.submit(self._mem0.add, messages, user_id=user_id, metadata=metadata or {})
+                mem0_resp = future.result(timeout=4.0)
                 mem_items = mem0_resp.get("results", []) if isinstance(mem0_resp, dict) else (mem0_resp or [])
                 for item in mem_items:
                     if isinstance(item, dict) and item.get("memory"):
                         results.append(item)
+            except FuturesTimeoutError:
+                if hasattr(self.llm_client, "_cooldown_until"):
+                    self.llm_client._cooldown_until = time.monotonic() + 45.0
             except Exception:
                 pass
 

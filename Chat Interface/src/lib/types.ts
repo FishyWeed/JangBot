@@ -53,3 +53,91 @@ export interface BotConfig {
 	memory_backend: string;
 	llm_available: boolean;
 }
+
+export interface ConceptNode {
+	id: string;
+	label: string;
+	korean_name?: string | null;
+	node_type: string;
+	category?: string | null;
+	summary: string;
+	aliases: string[];
+}
+
+export interface SemanticEdge {
+	id: number;
+	subject: string;
+	predicate: string;
+	object: string;
+	fact_id: string;
+	qualifier?: string | null;
+}
+
+export interface SemanticGraphOverview {
+	nodes: ConceptNode[];
+	edges: SemanticEdge[];
+	stats: {
+		node_count: number;
+		edge_count: number;
+		total_nodes: number;
+		total_edges: number;
+		node_types: string[];
+		predicates: string[];
+	};
+}
+
+export interface SemanticRelationDetail {
+	direction: 'outgoing' | 'incoming';
+	predicate: string;
+	neighbor_id: string;
+	neighbor_label: string;
+	neighbor_korean_name?: string | null;
+	neighbor_type: string;
+	fact_id: string;
+	qualifier?: string | null;
+	fact_statement: string;
+	citations: Citation[];
+}
+
+export interface SemanticFollowup {
+	id: string;
+	label: string;
+	korean_name?: string | null;
+	node_type: string;
+	predicate: string;
+	fact_id: string;
+	prompt: string;
+}
+
+export interface ConceptNodeDetails {
+	node: ConceptNode;
+	outgoing: SemanticRelationDetail[];
+	incoming: SemanticRelationDetail[];
+	fact_ids: string[];
+	citations: Citation[];
+	suggested_followups: SemanticFollowup[];
+}
+
+export interface SemanticPathHop {
+	from_id: string;
+	from_label: string;
+	predicate: string;
+	direction: 'outgoing' | 'incoming';
+	to_id: string;
+	to_label: string;
+	fact_id: string;
+	qualifier?: string | null;
+	fact_statement: string;
+	citations: Citation[];
+}
+
+export interface SemanticPathResult {
+	found: boolean;
+	source?: ConceptNode;
+	target?: ConceptNode;
+	hop_count: number;
+	hops: SemanticPathHop[];
+	fact_ids: string[];
+	citations: Citation[];
+	narrative?: string;
+}

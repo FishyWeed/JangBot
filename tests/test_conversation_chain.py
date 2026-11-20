@@ -55,3 +55,37 @@ def test_folk_choice_branch():
     assert res2["status"] == "answered"
     assert "nongak" in res2["reply"].lower()
     assert "harvest" in res2["reply"].lower() or "farmers" in res2["reply"].lower()
+
+
+def test_conversational_ping_pong_fragments_and_followups():
+    """Verify greetings, half-sentences, single words, ordinals and direct follow-ups never break."""
+    repo = KnowledgeRepository()
+    manager = DialogueManager(repo)
+    sid = "test_pingpong_fragments"
+
+    turns = [
+        ("Hey Danbi!", "social", ("hi, i'm danbi",)),
+        ("Doing pretty well, I am curious where the janggu even came from originally", "answered", ("idakka", "goryeosa")),
+        ("royal court first!", "answered", ("jeongak", "jongmyo")),
+        ("yes", "answered", ("nongak", "village")),
+        ("how are the hides tanned?", "answered", ("collagen", "micron")),
+        ("dog skin?!", "answered", ("doghide", "chaepyeon")),
+        ("wait what about the other side?", "answered", ("gungpyeon", "cowhide")),
+        ("museum conservation?", "answered", ("sr-μct", "p-xrf")),
+        ("Met Museum?", "answered", ("metropolitan museum", "19th-century")),
+        ("and Jungjungmori?", "answered", ("jungjungmori", "12-beat")),
+        ("and Jongmyo Jeryeak?", "answered", ("jongmyo jeryeak", "jeongak")),
+        ("no thanks, let's check out Daechwita", "answered", ("daechwita", "yonggo")),
+        ("whoa really? what about modern ROKA bands?", "answered", ("roka", "jajinmori")),
+        ("what about weddings?", "fallback", ("don't have verified information",)),
+        ("awesome, thanks for all the stories Danbi!", "answered", ("janggu",)),
+    ]
+
+    seen_replies = set()
+    for msg, expected_status, expected_terms in turns:
+        res = manager.process_message(sid, msg)
+        reply_low = res["reply"].lower()
+        assert res["status"] == expected_status, f"Turn {msg!r}: expected {expected_status}, got {res['status']} -> {res['reply']!r}"
+        assert any(t in reply_low for t in expected_terms), f"Turn {msg!r}: missing {expected_terms} in {res['reply']!r}"
+        assert reply_low not in seen_replies, f"Duplicate reply on {msg!r}"
+        seen_replies.add(reply_low)

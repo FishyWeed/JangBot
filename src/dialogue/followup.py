@@ -10,9 +10,11 @@ class FollowUpHandler:
 
     AFFIRMATIONS = {
         "yes", "yeah", "yep", "yup", "sure", "ok", "okay", "please",
-        "go ahead", "tell me", "both", "tell me both", "why not", "definitely",
-        "of course", "y", "yea", "yes please", "sure thing", "sounds good",
-        "tell me more", "explain", "i would like that", "yes i would", "sure do"
+        "go ahead", "go on", "continue", "keep going", "tell me", "both", "tell me both",
+        "why not", "definitely", "of course", "y", "yea", "yes please", "sure thing",
+        "sounds good", "tell me more", "more", "explain", "i would like that",
+        "yes i would", "sure do", "either", "let's hear it", "lets hear it",
+        "show me", "do it", "mhm", "uh huh", "absolutely", "bet", "gladly"
     }
 
     NEGATIONS = {
@@ -26,12 +28,28 @@ class FollowUpHandler:
         if not session.pending_offer:
             return False
 
-        clean = text.lower().strip()
+        clean = text.lower().strip(" ?!.,;:")
 
         # Explicit source explanation or proof queries should never be handled as offer responses
         if any(w in clean for w in ["source", "sources", "cite", "citation", "citations", "prove", "evidence"]):
             return False
         if clean.startswith("how do you know") or clean.startswith("where did you"):
+            return False
+
+        # If the user explicitly names a specific technical/historical topic outside the offer, yield to main routing
+        explicit_topic_overrides = {
+            "faust", "ebnf", "ijanggu", "umulsai", "conservation", "conservator", "sajanggu",
+            "celadon", "seoljanggu", "pansori", "daechwita", "hornbostel", "sldv", "nakdong",
+            "ottchil", "urushi", "isinglass", "galgo", "jeongganbo", "akhak", "goryeosa",
+            "duksu", "440hz", "melcnn", "mert", "fdtd", "dwm", "bela", "photogrammetry",
+            "dendrochronology", "tyloses", "g-fibers", "tanning", "tanned", "collagen",
+            "synthetic", "mylar", "fiberglass", "frp", "goguryeo", "baekje", "seyogo",
+            "bokpan", "byeonjuk", "choi", "unesco", "metropolitan", "met", "wedding", "weddings",
+            "density", "earlywood", "latewood", "shrinkage", "crystallinity",
+            "jungjungmori", "jajinmori", "eonmori", "jinyangjo", "roka", "jongmyo", "jeryeak",
+        }
+        clean_words = set(clean.replace(",", " ").replace("-", " ").split())
+        if clean_words & explicit_topic_overrides:
             return False
 
         if clean in cls.AFFIRMATIONS or clean in cls.NEGATIONS:
@@ -41,14 +59,19 @@ class FollowUpHandler:
 
         # Conversational continuation shorthands
         words = set(clean.split())
-        continuation_words = {"tell", "explain", "more", "details", "elaborate", "sure", "yes", "please", "go ahead"}
+        continuation_words = {"tell", "explain", "more", "details", "elaborate", "sure", "yes", "please", "go"}
         if len(words) <= 5 and (words & continuation_words):
             if offer_type in {
                 "court_or_folk", "court_vs_folk_technique", "sticks_or_strokes",
                 "tuning_or_acoustics", "beginner_rhythms", "chuimsae_offer",
-                "tuning_or_construction", "silla_evolution", "general_followup"
+                "tuning_or_construction", "slow_or_fast_rhythms", "silla_evolution",
+                "hides_comparison", "general_followup"
             }:
                 return True
+
+        # Don't let long unrelated queries get swallowed by a stale pending offer
+        if len(words) > 7 and not any(w in words for w in {"first", "second", "both", "either"}):
+            return False
 
         if offer_type == "court_or_folk":
             return any(w in clean for w in ["court", "royal", "folk", "village", "festival", "festivals", "first", "second", "1", "2", "both"])
@@ -57,15 +80,21 @@ class FollowUpHandler:
         elif offer_type == "sticks_or_strokes":
             return any(w in clean for w in ["stick", "sticks", "stroke", "strokes", "mallet", "whip", "yeolchae", "gungchae", "sound", "sounds", "first", "second", "1", "2", "both"])
         elif offer_type == "tuning_or_acoustics":
-            return any(w in clean for w in ["tuning", "tune", "cords", "wedge", "joimjul", "joigae", "acoustic", "acoustics", "science", "choke", "jorongmok", "first", "second", "1", "2", "both"])
+            return any(w in clean for w in ["tuning", "tune", "cords", "cord", "rope", "ropes", "wedge", "wedges", "joimjul", "joigae", "acoustic", "acoustics", "science", "choke", "jorongmok", "hide", "hides", "skin", "skins", "first", "second", "1", "2", "both"])
+        elif offer_type == "hides_comparison":
+            return any(w in clean for w in ["hide", "hides", "skin", "skins", "leather", "cowhide", "horsehide", "doghide", "left", "right", "both", "first", "second", "1", "2"])
         elif offer_type == "beginner_rhythms":
             return any(w in clean for w in ["rhythm", "rhythms", "jangdan", "beat", "beats", "jungmori", "hwimori", "gutgeori", "first", "second", "1", "2", "both"])
+        elif offer_type == "slow_or_fast_rhythms":
+            return any(w in clean for w in ["slow", "slowest", "fast", "fastest", "festival", "court", "jinyangjo", "hwimori", "gutgeori", "first", "second", "1", "2", "both"])
         elif offer_type == "chuimsae_offer":
             return any(w in clean for w in ["shout", "shouts", "chuimsae", "eolssigu", "jota", "vocal", "audience", "rhythm", "both"])
         elif offer_type == "tuning_or_construction":
-            return any(w in clean for w in ["tuning", "tune", "cord", "cords", "wedge", "wedges", "construction", "wood", "paulownia", "body", "both"])
+            return any(w in clean for w in ["tuning", "tune", "cord", "cords", "rope", "ropes", "wedge", "wedges", "construction", "wood", "paulownia", "body", "shell", "scorch", "first", "second", "1", "2", "both"])
+        elif offer_type == "silla_evolution":
+            return any(w in clean for w in ["silla", "yogo", "idakka", "silk", "evolution", "earlier", "before", "both"])
         elif offer_type == "general_followup":
-            return True
+            return len(words) <= 4 and bool(words & (cls.AFFIRMATIONS | {"more", "continue", "next", "else"}))
 
         return False
 
@@ -74,7 +103,7 @@ class FollowUpHandler:
         """Resolve pending offer into varied, non-repeating conversational responses and fact IDs."""
         offer = session.pending_offer or {}
         offer_type = offer.get("type", "general_followup")
-        clean = text.lower().strip()
+        clean = text.lower().strip(" ?!.,;:")
 
         # Handle negation
         if clean in cls.NEGATIONS:
@@ -101,6 +130,11 @@ class FollowUpHandler:
             session.clear_pending_offer()
             wants_court = any(w in clean for w in ["court", "royal", "first", "1"])
             wants_folk = any(w in clean for w in ["folk", "village", "festival", "festivals", "second", "2"])
+            if not wants_court and not wants_folk:
+                if offer.get("court_done"):
+                    wants_folk = True
+                elif offer.get("folk_done"):
+                    wants_court = True
 
             if wants_court and not wants_folk:
                 reply = compose_variation(
@@ -213,29 +247,21 @@ class FollowUpHandler:
             session.clear_pending_offer()
             wants_strokes = any(w in clean for w in ["stroke", "strokes", "second", "2"])
             wants_sticks = any(w in clean for w in ["stick", "sticks", "mallet", "first", "1", "yeolchae", "gungchae"])
+            if offer.get("sticks_done") and not wants_sticks:
+                wants_strokes = True
 
             if wants_strokes and not wants_sticks:
                 reply = compose_variation(
                     "followup::strokes",
                     (
                         (
-                            "Janggu notation and pedagogy revolve around five core strokes:\n"
-                            "- Deong (덩): Both heads struck together to mark the primary downbeat.\n"
-                            "- Gung (궁): Bass strike on the left cowhide head.\n"
-                            "- Tta (따): Crisp center hit on the right treble head.\n"
-                            "- Gi-deok (기덕): Rapid grace-note flam with the whip stick.\n"
-                            "- Kkol / Jjak (짝): Piercing slap against the rim and wooden hoop."
+                            "Listen closely to a seasoned janggu drummer and every phrase he plays tells its story through five classic strokes. When both hands strike together to plant a bold downbeat, that union is called Deong (덩). Left on its own, the weighted bass head answers with a deep Gung (궁), while the crisp center of the right treble skin speaks with Tta (따). To dress the line, the whip flicks a quick grace-note flam called Gi-deok (기덕), and a sharp slap catching skin and wooden hoop slices across the air as Kkol or Jjak (짝)."
                         ),
                         (
-                            "Drummers build every rhythmic pattern out of five signature strokes:\n"
-                            "- Deong (덩): Simultaneous strike on bass and treble heads.\n"
-                            "- Gung (궁): Deep solo hit on the left membrane.\n"
-                            "- Tta (따): Sharp center tap on the right membrane.\n"
-                            "- Gi-deok (기덕): Quick double-tap flam on the treble side.\n"
-                            "- Kkol / Jjak (짝): High rimshot across edge skin and wood."
+                            "Before reading a page of grid notation, drummers pass down the craft orally through five signature strokes: Deong (덩) locks left and right heads in unison at the anchor of a beat, Gung (궁) drops resonant bass weight on the cowhide side, Tta (따) cracks clean from the treble center, Gi-deok (기덕) snaps as a lightning treble flam and Kkol / Jjak (짝) rings out like a bright rimshot on the edge."
                         ),
                         (
-                            "Everything in a janggu performance maps back to five named strikes—Deong (덩) hitting both heads in unison, Gung (궁) anchoring left-side bass, Tta (따) snapping the right center, Gi-deok (기덕) adding a quick treble flam and Kkol / Jjak (짝) cutting through as a sharp rimshot."
+                            "Everything in a janggu performance maps back to a five-stroke vocabulary: Deong (덩) brings both heads together, Gung (궁) carries left-side bass, Tta (따) punches the right treble center, Gi-deok (기덕) weaves fast whip flams and Kkol / Jjak (짝) cuts through cleanly against the outer rim."
                         ),
                     ),
                     (
@@ -254,16 +280,13 @@ class FollowUpHandler:
                 "followup::sticks",
                 (
                     (
-                        "Each hand uses an implement shaped for its membrane:\n"
-                        "- Right hand (yeolchae): A thin, springy bamboo strip engineered to whip sharp treble snaps off thin horsehide.\n"
-                        "- Left hand (gungchae): Carved from a boiled bamboo root tipped with dense hardwood or antler to pull warm bass thuds from thick cowhide."
+                        "Watch a drummer unpack his bag and you notice right away that the two sticks do not match at all. In the right hand goes the yeolchae, a slender strip of flexible bamboo cut to whip sharp, stinging treble cracks off thin horsehide; in the left waits the gungchae, carved from a boiled bamboo root tipped with heavy hardwood or antler so it can pull deep bass warmth from thick cowhide."
                     ),
                     (
-                        "The two sticks match the left/right asymmetry of the drumheads.\n"
-                        "Your right hand flexes the lightweight bamboo yeolchae for crisp stinging cracks on treble skin, while your left grips the gungchae mallet—weighted at its bamboo-root tip with hardwood or horn for full bass resonance."
+                        "The two implements mirror the contrasting hides on either side of the drum. The thin bamboo yeolchae flexes at the right wrist to strike biting treble snaps, whereas the root-headed gungchae mallet acts like a weighted hammer in the left hand to wake up the cowhide bass."
                     ),
                     (
-                        "Instead of matched drumsticks, the yeolchae and gungchae work as contrasting partners: the slender bamboo yeolchae whips bright high frequencies from the right head, while the weighted root-headed gungchae mallet drives low resonance from the left."
+                        "Instead of paired sticks, drummers balance two opposite partners: the springy bamboo yeolchae cutting bright treble strokes on the right, and the dense bamboo-root gungchae mallet pulling full low resonance from the left."
                     ),
                 ),
                 (
@@ -278,11 +301,37 @@ class FollowUpHandler:
             session.set_pending_offer({"type": "sticks_or_strokes", "sticks_done": True})
             return reply, ["F04", "F05", "F19"]
 
-        # 4. Handle tuning_or_acoustics offer
+        # 4. Handle hides_comparison offer
+        if offer_type == "hides_comparison":
+            session.clear_pending_offer()
+            reply = compose_variation(
+                "followup::hides_comparison",
+                (
+                    "Set the two skins side by side and you can practically hear yin and yang talking to each other. On the left bass head (gungpyeon), thick cowhide or deerskin spans roughly 36 to 46 cm across to roll out a warm, low boom; on the right treble head (chaepyeon), thin horsehide or doghide stretches 35 to 45 cm to snap with dry, piercing clarity.",
+                    "Craftspeople intentionally pair mismatched animal hides so one hourglass shell speaks in two distinct voices. Thick cowhide or deerskin on the left gungpyeon head absorbs deep mallet energy for resonant bass, while thin horsehide or doghide on the right chaepyeon answers the bamboo whip with bright treble crack.",
+                    "The janggu's unmistakable duality comes straight from its opposing skins: thick cowhide or deerskin gives the left gungpyeon head slow, full-bodied depth, whereas shaved horsehide or doghide makes the right chaepyeon head fast, sharp and articulate.",
+                ),
+                (
+                    "Curious how the hollowed Paulownia wood shell shapes those two voices inside?",
+                    "Want to step inside the drum and look at how the narrow jorongmok waist keeps those two tones separate?",
+                    "Should we explore the carved Paulownia wood body next, or jump into the five core strokes?",
+                ),
+                session=session,
+                separator="\n\n",
+            )
+            session.set_pending_offer({"type": "tuning_or_construction", "tuning_done": True})
+            return reply, ["F02", "F43"]
+
+        # 4b. Handle tuning_or_acoustics offer
         if offer_type == "tuning_or_acoustics":
             session.clear_pending_offer()
+            wants_hides = any(w in clean for w in ["hide", "hides", "skin", "skins", "leather"]) or bool(offer.get("tuning_done"))
             wants_acoustics = any(w in clean for w in ["acoustic", "acoustics", "science", "choke", "second", "2"])
-            if wants_acoustics:
+            wants_tuning = any(w in clean for w in ["tuning", "tune", "cord", "cords", "rope", "ropes", "wedge", "wedges", "joimjul", "joigae", "first", "1"])
+            if wants_hides and not wants_acoustics and not wants_tuning:
+                session.set_pending_offer({"type": "hides_comparison"})
+                return cls.resolve("yes", session)
+            if wants_acoustics and not wants_tuning:
                 reply = compose_variation(
                     "followup::acoustics",
                     (
@@ -318,7 +367,7 @@ class FollowUpHandler:
                 session=session,
                 separator=" ",
             )
-            session.set_pending_offer({"type": "tuning_or_acoustics", "tuning_done": True})
+            session.set_pending_offer({"type": "hides_comparison"})
             return reply, ["F02", "F18"]
 
         # 5. Handle beginner_rhythms offer
@@ -368,8 +417,14 @@ class FollowUpHandler:
         # 7. Handle tuning_or_construction offer
         if offer_type == "tuning_or_construction":
             session.clear_pending_offer()
-            wants_tuning = any(w in clean for w in ["tuning", "tune", "cord", "cords", "wedge", "wedges"])
-            if wants_tuning:
+            wants_tuning = any(w in clean for w in ["tuning", "tune", "cord", "cords", "rope", "ropes", "wedge", "wedges", "second", "2"])
+            wants_wood = any(w in clean for w in ["wood", "paulownia", "body", "shell", "construction", "scorch", "first", "1"])
+            if not wants_tuning and not wants_wood:
+                if offer.get("wood_done"):
+                    wants_tuning = True
+                else:
+                    wants_wood = True
+            if wants_tuning and not wants_wood:
                 reply = compose_variation(
                     "followup::tuning_construction_tune",
                     (
@@ -385,6 +440,7 @@ class FollowUpHandler:
                     session=session,
                     separator=" ",
                 )
+                session.set_pending_offer({"type": "tuning_or_construction", "tuning_done": True})
                 return reply, ["F18"]
 
             reply = compose_variation(
@@ -402,13 +458,20 @@ class FollowUpHandler:
                 session=session,
                 separator=" ",
             )
+            session.set_pending_offer({"type": "tuning_or_construction", "wood_done": True})
             return reply, ["F16"]
 
         # 8. Handle slow_or_fast_rhythms offer
         if offer_type == "slow_or_fast_rhythms":
             session.clear_pending_offer()
-            wants_fast = any(w in clean for w in ["fast", "festival", "hwimori", "gutgeori", "second", "2"])
-            if wants_fast:
+            wants_fast = any(w in clean for w in ["fast", "fastest", "festival", "hwimori", "gutgeori", "second", "2"])
+            wants_slow = any(w in clean for w in ["slow", "slowest", "court", "jinyangjo", "first", "1"])
+            if not wants_fast and not wants_slow:
+                if offer.get("slow_done"):
+                    wants_fast = True
+                elif offer.get("fast_done"):
+                    wants_slow = True
+            if wants_fast and not wants_slow:
                 reply = compose_variation(
                     "followup::fast_rhythms",
                     (
@@ -424,6 +487,7 @@ class FollowUpHandler:
                     session=session,
                     separator=" ",
                 )
+                session.set_pending_offer({"type": "slow_or_fast_rhythms", "fast_done": True})
                 return reply, ["F25", "F26"]
 
             reply = compose_variation(
@@ -441,6 +505,7 @@ class FollowUpHandler:
                 session=session,
                 separator=" ",
             )
+            session.set_pending_offer({"type": "slow_or_fast_rhythms", "slow_done": True})
             return reply, ["F21"]
 
         # 9. Handle silla_evolution offer
