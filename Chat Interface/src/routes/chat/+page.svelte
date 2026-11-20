@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '../../lib/api';
 	import DanbiStage from '../../lib/components/DanbiStage.svelte';
+	import TopicsDrawer, { type TopicItem } from '../../lib/components/TopicsDrawer.svelte';
 	import {
 		AppShell,
 		Sidebar,
@@ -25,6 +26,81 @@
 		'How do court and folk playing techniques differ?',
 		'Explain the five foundational strokes.',
 		'What are the main jangdan rhythmic cycles?'
+	];
+
+	const TOPIC_ITEMS: TopicItem[] = [
+		{
+			id: 'origins',
+			title: 'Origins & Silk Road',
+			ko: '기원',
+			prompt: 'Where did the janggu originate and how did it arrive in Korea?'
+		},
+		{
+			id: 'history',
+			title: 'Historical Timeline',
+			ko: '역사',
+			prompt: 'Tell me about the history and major milestones of the janggu.'
+		},
+		{
+			id: 'construction',
+			title: 'Construction & Materials',
+			ko: '구조와 재료',
+			prompt: 'What materials are used to build the janggu body and drumheads?'
+		},
+		{
+			id: 'sticks',
+			title: 'The Two Sticks',
+			ko: '궁채와 열채',
+			prompt: 'How do the gungchae and yeolchae sticks differ?'
+		},
+		{
+			id: 'strokes',
+			title: 'Five Foundational Strokes',
+			ko: '기본 주법',
+			prompt: 'Explain the five foundational strokes of the janggu.'
+		},
+		{
+			id: 'jangdan',
+			title: 'Jangdan Rhythmic Cycles',
+			ko: '장단',
+			prompt: 'What are the main traditional jangdan rhythmic cycles?'
+		},
+		{
+			id: 'court-folk',
+			title: 'Court vs. Folk Music',
+			ko: '정악과 민속악',
+			prompt: 'How does playing the janggu differ between royal court music and folk festivals?'
+		},
+		{
+			id: 'acoustics',
+			title: 'Tuning & Acoustics',
+			ko: '조율과 음향',
+			prompt: 'How do the joimjul cords and joigae wedges tune the janggu acoustics?'
+		},
+		{
+			id: 'notation',
+			title: 'Jeongganbo Notation',
+			ko: '정간보',
+			prompt: 'How is the janggu written in King Sejong Jeongganbo notation?'
+		},
+		{
+			id: 'chuimsae',
+			title: 'Chuimsae Vocal Shouts',
+			ko: '추임새',
+			prompt: 'What is chuimsae and how is it used during performances?'
+		},
+		{
+			id: 'samulnori',
+			title: 'Samulnori & Modern Stage',
+			ko: '사물놀이',
+			prompt: 'How did Samulnori bring the janggu to modern stages worldwide?'
+		},
+		{
+			id: 'beginner',
+			title: 'Difficulty & Beginner Tips',
+			ko: '입문',
+			prompt: 'Is the janggu difficult for a beginner to learn?'
+		}
 	];
 
 	let botConfig = $state<BotConfig | null>(null);
@@ -56,10 +132,16 @@
 						: 'lantern'
 	);
 
-	// Memories & confirm UI state
+	// Drawers & confirm UI state
+	let topicsOpen = $state(false);
 	let memoriesOpen = $state(false);
 	let resetConfirmOpen = $state(false);
 	let profileMemories = $state<Array<Record<string, unknown>>>([]);
+
+	function handlePickTopic(prompt: string) {
+		topicsOpen = false;
+		sendMessage(prompt);
+	}
 
 	let sidebarProfiles = $derived<DesignProfile[]>(
 		profiles.map((p) => ({
@@ -247,7 +329,10 @@
 
 <svelte:window
 	onkeydown={(e) => {
-		if (resetConfirmOpen && e.key === 'Escape') resetConfirmOpen = false;
+		if (e.key === 'Escape') {
+			if (resetConfirmOpen) resetConfirmOpen = false;
+			else if (topicsOpen) topicsOpen = false;
+		}
 	}}
 />
 
@@ -270,8 +355,13 @@
 		title={activeProfile?.title ?? 'JangBot Chat'}
 		thinking={isSending}
 		mascotState={speakingId ? 'speaking' : undefined}
+		{topicsOpen}
 		memoryOpen={memoriesOpen}
 		canReset={!!activeProfile && !isSending && (activeProfile.messages.length > 0)}
+		ontoggletopics={() => {
+			topicsOpen = !topicsOpen;
+			if (topicsOpen) memoriesOpen = false;
+		}}
 		ontogglememory={toggleMemoriesDrawer}
 		onreset={() => {
 			if (activeProfile && !isSending) resetConfirmOpen = true;
@@ -313,6 +403,14 @@
 	thinking={isSending}
 	hasError={!!errorBanner}
 	messageCount={feedMessages.length}
+/>
+
+<TopicsDrawer
+	open={topicsOpen}
+	busy={isLoading || isSending || !activeProfile}
+	topics={TOPIC_ITEMS}
+	onpick={handlePickTopic}
+	onclose={() => (topicsOpen = false)}
 />
 
 {#if memoriesOpen}
