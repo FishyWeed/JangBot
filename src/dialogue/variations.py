@@ -168,12 +168,13 @@ def compose_variation(
         "Looking at the same tradition through a slightly different lens:",
         "To revisit that piece of the janggu's story:",
     )
+    reframe = None if (key.startswith("gap::fallback") or key.startswith("guard::")) else fallback_bridges
     return pick_variation(
         key,
         combos,
         session=session,
         avoid_texts=avoid_texts,
-        reframe_prefixes=fallback_bridges,
+        reframe_prefixes=reframe,
     )
 
 

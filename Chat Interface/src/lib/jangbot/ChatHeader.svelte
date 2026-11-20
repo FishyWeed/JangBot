@@ -4,10 +4,10 @@
 
   /**
    * @type {{ title: string, thinking?: boolean, mascotState?: 'idle' | 'thinking' | 'speaking',
-   *   topicsOpen?: boolean, graphOpen?: boolean, memoryOpen?: boolean, canReset?: boolean,
-   *   ontoggletopics?: () => void, ontogglegraph?: () => void, ontogglememory?: () => void, onreset?: () => void }}
+   *   exploreOpen?: boolean, memoryOpen?: boolean, canReset?: boolean,
+   *   ontoggleexplore?: () => void, ontogglememory?: () => void, onreset?: () => void }}
    */
-  let { title, thinking = false, mascotState, topicsOpen = false, graphOpen = false, memoryOpen = false, canReset = true, ontoggletopics, ontogglegraph, ontogglememory, onreset } = $props();
+  let { title, thinking = false, mascotState, exploreOpen = false, memoryOpen = false, canReset = true, ontoggleexplore, ontogglememory, onreset } = $props();
   let state = $derived(mascotState ?? (thinking ? 'thinking' : 'idle'));
 </script>
 
@@ -20,11 +20,8 @@
     </span>
   </div>
   <div class="jb-header__actions">
-    {#if ontoggletopics}
-      <Button variant="ghost" icon="sparkles" label="Topics" hideLabelOnMobile aria-expanded={topicsOpen} onclick={ontoggletopics} />
-    {/if}
-    {#if ontogglegraph}
-      <Button variant="ghost" icon="network" label="Concept Map" hideLabelOnMobile aria-expanded={graphOpen} onclick={ontogglegraph} />
+    {#if ontoggleexplore}
+      <Button variant="ghost" icon="network" label="Topics & Map" hideLabelOnMobile aria-expanded={exploreOpen} onclick={ontoggleexplore} />
     {/if}
     <Button variant="ghost" icon="database" label="Memory" hideLabelOnMobile aria-expanded={memoryOpen} onclick={ontogglememory} />
     <Button variant="ghost" icon="rotateCcw" label="Reset" hideLabelOnMobile disabled={thinking || !canReset} onclick={onreset} />

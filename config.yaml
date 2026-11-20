@@ -44,3 +44,12 @@ memory:
   local_fallback_db: "data/local_memories.db"
   embedder_model: "all-MiniLM-L6-v2"
   top_k: 5
+
+training:
+  log_trajectories: true
+  trajectory_log: "data/trajectories.jsonl"
+  rft_output: "data/rft_verified.jsonl"
+  use_local_lora_adapter: true
+  lora_adapter_path: "models/danbi-lora"
+  lora_rank: 8
+  replay_ratio: 0.30

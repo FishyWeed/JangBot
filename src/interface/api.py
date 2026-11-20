@@ -146,6 +146,7 @@ def health() -> Dict[str, Any]:
         "status": "ok",
         "memory_backend": dm.memory_manager.backend_mode,
         "llm_available": dm.agent.nodes.llm.is_available,
+        "local_lora_loaded": dm.agent.nodes.llm.has_local_lora,
     }
 
 

@@ -8,9 +8,10 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Runtime databases & logs
+# Runtime databases, logs & local LoRA weights
 data/
 logs/
+models/
 
 # Frontend build & dependencies
 Chat Interface/node_modules/

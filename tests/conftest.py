@@ -18,3 +18,8 @@ def isolated_agent_storage(tmp_path, monkeypatch):
     mem_cfg["qdrant_path"] = str(tmp_path / "mem0_qdrant")
     mem_cfg["history_db"] = str(tmp_path / "mem0_history.db")
     monkeypatch.setitem(config, "memory", mem_cfg)
+
+    train_cfg = dict(config.get("training", {}))
+    train_cfg["trajectory_log"] = str(tmp_path / "trajectories.jsonl")
+    train_cfg["use_local_lora_adapter"] = False
+    monkeypatch.setitem(config, "training", train_cfg)

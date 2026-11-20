@@ -17,6 +17,7 @@ from src.dialogue.variations import (
 )
 from src.memory.session import SessionMemory
 from src.memory.long_term import LongTermMemoryManager
+from src.memory.trajectory import TrajectoryLogger, detect_feedback_signal
 from src.agent.tools import JangguToolchain
 from src.agent.llm import HybridLLMClient
 from src.agent.state import JangBotState
@@ -182,6 +183,9 @@ FRAMING_AND_STOPWORDS = {
     "recap", "fair", "enough", "check", "checking", "ancient", "old", "older", "early",
     "earlier", "past", "present", "future", "times", "modern", "beginner", "beginners",
     "gets", "sore", "tense", "tired", "hurts", "hurt", "ache", "stories", "yes",
+    "hat", "hats", "spot", "thorough", "village", "villages", "festival", "festivals",
+    "lively", "percussion", "yet", "dates", "studies", "study", "engineering", "sources",
+    "source", "woodworker", "conservator", "curious", "explain", "back", "research",
 }
 
 # Context adjectives/eras that must not create false DB hits when probing whether a specific gap topic is in janggu.db
@@ -228,6 +232,7 @@ class JangBotNodes:
         self.nlp = nlp or NLPPreprocessor()
         self.classifier = classifier or IntentClassifier()
         self.llm = llm_client or memory_manager.llm_client
+        self.trajectory_logger = TrajectoryLogger()
 
     @staticmethod
     def _build_session_proxy(state: JangBotState) -> SessionMemory:
@@ -507,6 +512,8 @@ class JangBotNodes:
             "retrieved_facts": [],
             "citations": [],
             "baseline_reply": "",
+            "tool_calls": [],
+            "system_prompt": "",
         }
 
     # ------------------------------------------------------------ Node 2: Rewrite Context
@@ -643,6 +650,13 @@ class JangBotNodes:
                 "citations": citations,
                 "baseline_reply": reply,
                 "last_fact_ids": fact_ids,
+                "tool_calls": [
+                    {
+                        "tool": "followup_resolve",
+                        "args": {"raw_query": raw_query},
+                        "fact_ids": list(fact_ids),
+                    }
+                ],
                 "pending_offer": session_proxy.pending_offer,
                 "active_topic": state.get("active_topic") or "general",
                 "used_variants": session_proxy.used_variants,
@@ -768,10 +782,24 @@ class JangBotNodes:
         conf_threshold = config["nlp"]["confidence_threshold"]
         clarification_threshold = config["nlp"]["clarification_threshold"]
 
-        # Context overrides for pitch-tightening, court-vs-folk technique, acoustics, conservation and sajanggu/NGC chronology
+        # Context overrides for citations, pitch-tightening, court-vs-folk technique, acoustics, conservation and sajanggu/NGC chronology
         canon_tokens = set(canonical.split())
+        raw_alpha_tokens = set(re.findall(r"[a-z]+", cleaned.lower()))
         override_applied = True
-        if ("gungpyeon" in entities or "chaepyeon" in entities) and (canon_tokens & {"tighten", "tight", "pitch", "tune", "tuned", "tuning"}):
+        if (
+            any(
+                p in cleaned
+                for p in (
+                    "how do you know", "cite", "citation", "citations", "what sources",
+                    "which sources", "your sources", "those sources", "where do those",
+                    "where did those", "studies come from", "back those", "prove it",
+                )
+            )
+            and state.get("last_fact_ids")
+        ):
+            intent = "ask_source_explanation"
+            confidence = max(confidence, 0.92)
+        elif ("gungpyeon" in entities or "chaepyeon" in entities) and (canon_tokens & {"tighten", "tight", "pitch", "tune", "tuned", "tuning"}):
             entities["joimjul"] = "joimjul"
             intent = "ask_construction"
             confidence = max(confidence, 0.85)
@@ -789,7 +817,14 @@ class JangBotNodes:
         elif "bokpan" in entities and not (canon_tokens & {"sldv", "helmholtz", "tmm", "adsr", "vibrometry"}):
             intent = "ask_playing_technique"
             confidence = max(confidence, 0.85)
-        elif "acoustics_physics" in entities or (canon_tokens & {"overtone", "overtones", "inharmonic", "bessel", "frequency", "frequencies", "acoustics", "acoustic"}):
+        elif (
+            "acoustics_physics" in entities
+            or (canon_tokens & {"overtone", "overtones", "inharmonic", "bessel", "frequency", "frequencies", "acoustics", "acoustic"})
+            or (
+                "synthetic" not in entities
+                and (canon_tokens & {"hygroscopicity", "humidity", "moisture"})
+            )
+        ):
             intent = "ask_acoustics"
             confidence = max(confidence, 0.85)
         elif "ml_dsp" in entities or "conservation" in entities:
@@ -874,13 +909,14 @@ class JangBotNodes:
             confidence = max(confidence, conf_threshold)
 
         # Accept clear appreciative reactions & concise domain-keyword fragments without bouncing to clarification
-        ack_words = {"thanks", "thank", "neat", "cool", "awesome", "interesting", "wow", "whoa", "gotcha", "makes", "sense", "nice", "lovely", "fascinating"}
+        ack_words = {"thanks", "thank", "neat", "cool", "awesome", "interesting", "wow", "whoa", "gotcha", "makes", "sense", "nice", "lovely", "fascinating", "thorough"}
+        has_thanks = bool(raw_alpha_tokens & {"thanks", "thank"})
         if (
-            (intent == "conversational_acknowledgment" or ("thanks" in tokens or "thank" in tokens))
+            (intent == "conversational_acknowledgment" or has_thanks)
             and "?" not in raw_query
-            and not entities
+            and not (set(entities) - {"janggu"})
             and len(cleaned.split()) <= 10
-            and (tokens & ack_words)
+            and ((tokens & ack_words) or has_thanks)
         ):
             intent = "conversational_acknowledgment"
             confidence = max(confidence, conf_threshold)
@@ -1187,15 +1223,18 @@ class JangBotNodes:
         confidence = float(state.get("confidence") or 0.0)
         resolved_query = state.get("resolved_query") or state.get("raw_query", "")
         session_proxy = self._build_session_proxy(state)
+        tool_calls: List[Dict[str, Any]] = []
 
         if intent == "ask_source_explanation":
             fact_ids = session_proxy.last_fact_ids
             explained = self.toolchain.explain_sources_sync(fact_ids, session=session_proxy)
+            tool_calls.append({"tool": "explain_sources", "args": {"fact_ids": list(fact_ids)}, "fact_ids": list(fact_ids)})
             return {
                 "retrieved_facts": [],
                 "citations": explained["citations"],
                 "baseline_reply": explained["text"],
                 "last_fact_ids": fact_ids,
+                "tool_calls": tool_calls,
                 "response_status": "answered",
                 "used_variants": session_proxy.used_variants,
                 "recent_replies": session_proxy.recent_replies,
@@ -1207,6 +1246,13 @@ class JangBotNodes:
             rel_res = self.toolchain.answer_relational_query_sync(resolved_query)
             if rel_res and rel_res.get("found") and rel_res.get("hop_count", 0) >= 2 and rel_res.get("fact_ids"):
                 story = self.toolchain.semantic_network.render_path_story(rel_res, session=session_proxy)
+                tool_calls.append(
+                    {
+                        "tool": "answer_relational_query",
+                        "args": {"query": resolved_query, "hops": int(rel_res.get("hop_count", 0))},
+                        "fact_ids": list(rel_res["fact_ids"]),
+                    }
+                )
                 return {
                     "retrieved_facts": rel_res["facts"],
                     "citations": rel_res["citations"],
@@ -1215,6 +1261,7 @@ class JangBotNodes:
                     "active_topic": rel_res["target"].get("category") or "general",
                     "last_fact_ids": rel_res["fact_ids"],
                     "last_entities": entities or {rel_res["target"]["id"]: rel_res["target"]["id"]},
+                    "tool_calls": tool_calls,
                     "pending_offer": None,
                     "used_variants": session_proxy.used_variants,
                     "recent_replies": session_proxy.recent_replies,
@@ -1224,6 +1271,13 @@ class JangBotNodes:
         facts = eval_result["facts"]
         citations = eval_result["citations"]
         baseline_text = eval_result["baseline_text"]
+        tool_calls.append(
+            {
+                "tool": "evaluate_rules",
+                "args": {"intent": intent or "", "entities": dict(entities)},
+                "fact_ids": list(eval_result.get("fact_ids") or []),
+            }
+        )
 
         # Check whether canned template leaves the user's actual core topic unaddressed
         gap_override = self._assess_and_build_gap_response(
@@ -1235,6 +1289,13 @@ class JangBotNodes:
             session=session_proxy,
         )
         if gap_override is not None:
+            tool_calls.append(
+                {
+                    "tool": "gap_search_facts",
+                    "args": {"query": resolved_query},
+                    "fact_ids": list(gap_override["fact_ids"]),
+                }
+            )
             return {
                 "retrieved_facts": gap_override["facts"],
                 "citations": gap_override["citations"],
@@ -1243,6 +1304,7 @@ class JangBotNodes:
                 "active_topic": gap_override["active_topic"],
                 "last_fact_ids": gap_override["fact_ids"],
                 "last_entities": entities or state.get("last_entities") or {},
+                "tool_calls": tool_calls,
                 "pending_offer": gap_override["pending_offer"],
                 "used_variants": session_proxy.used_variants,
                 "recent_replies": session_proxy.recent_replies,
@@ -1267,10 +1329,14 @@ class JangBotNodes:
         # Supplement with keyword search from janggu.db when useful
         extra_facts = self.toolchain.search_facts_sync(resolved_query, limit=3)
         seen_ids = {f["id"] for f in facts}
+        added_extra_ids: List[str] = []
         for ef in extra_facts:
             if ef["id"] not in seen_ids:
                 facts.append(ef)
                 seen_ids.add(ef["id"])
+                added_extra_ids.append(ef["id"])
+        if added_extra_ids:
+            tool_calls.append({"tool": "search_facts", "args": {"query": resolved_query}, "fact_ids": added_extra_ids})
 
         return {
             "retrieved_facts": facts,
@@ -1280,6 +1346,7 @@ class JangBotNodes:
             "active_topic": session_proxy.active_topic,
             "last_fact_ids": eval_result["fact_ids"] or session_proxy.last_fact_ids,
             "last_entities": entities or state.get("last_entities") or {},
+            "tool_calls": tool_calls,
             "pending_offer": session_proxy.pending_offer,
             "used_variants": session_proxy.used_variants,
             "recent_replies": session_proxy.recent_replies,
@@ -1293,12 +1360,19 @@ class JangBotNodes:
         baseline = state.get("baseline_reply", "")
         memories = state.get("user_memories") or []
         session_proxy = self._build_session_proxy(state)
+        default_sys_prompt = (
+            f"You are {config['bot']['name']} ({config.get('bot', {}).get('pronouns', 'he/him')}), "
+            "a Korean janggu tutor and traditional storyteller. "
+            "Ground every claim strictly in verified facts from janggu.db without hallucination, "
+            "respect retrieved Mem0 learner context and avoid bullet dumps or banned clichés."
+        )
 
         # Strict deterministic bypass for guardrails, source citations and social turns
         if guard in {"off_topic", "fallback", "clarification"}:
             remember_reply(baseline, session_proxy)
             return {
                 "reply": baseline,
+                "system_prompt": default_sys_prompt,
                 "used_variants": session_proxy.used_variants,
                 "recent_replies": session_proxy.recent_replies,
             }
@@ -1308,6 +1382,7 @@ class JangBotNodes:
             remember_reply(social_out, session_proxy)
             return {
                 "reply": social_out,
+                "system_prompt": default_sys_prompt,
                 "used_variants": session_proxy.used_variants,
                 "recent_replies": session_proxy.recent_replies,
             }
@@ -1316,6 +1391,7 @@ class JangBotNodes:
             remember_reply(baseline, session_proxy)
             return {
                 "reply": baseline,
+                "system_prompt": default_sys_prompt,
                 "used_variants": session_proxy.used_variants,
                 "recent_replies": session_proxy.recent_replies,
             }
@@ -1330,11 +1406,12 @@ class JangBotNodes:
 
         # Synthesize with LLM whenever configured and verified facts are attached (including follow-ups!)
         if self.llm.is_available and state.get("retrieved_facts"):
-            llm_reply = self._llm_synthesize(state, tempo_note, session_proxy)
+            llm_reply, llm_sys_prompt = self._llm_synthesize(state, tempo_note, session_proxy)
             if llm_reply:
                 remember_reply(llm_reply, session_proxy)
                 return {
                     "reply": llm_reply,
+                    "system_prompt": llm_sys_prompt,
                     "used_variants": session_proxy.used_variants,
                     "recent_replies": session_proxy.recent_replies,
                 }
@@ -1344,6 +1421,7 @@ class JangBotNodes:
             remember_reply(baseline, session_proxy)
             return {
                 "reply": baseline,
+                "system_prompt": default_sys_prompt,
                 "used_variants": session_proxy.used_variants,
                 "recent_replies": session_proxy.recent_replies,
             }
@@ -1352,6 +1430,7 @@ class JangBotNodes:
         remember_reply(offline_reply, session_proxy)
         return {
             "reply": offline_reply,
+            "system_prompt": default_sys_prompt,
             "used_variants": session_proxy.used_variants,
             "recent_replies": session_proxy.recent_replies,
         }
@@ -1463,14 +1542,45 @@ class JangBotNodes:
             parts.append("")
             parts.extend(coaching_tips)
 
-        return "\n".join(parts).strip()
+        primary = "\n".join(parts).strip()
+
+        # When a locally fine-tuned LoRA adapter is active, rank strictly grounded variants via the GRPO policy
+        if self.llm.has_local_lora and primary:
+            candidates = [primary]
+            if coaching_tips and tempo_note:
+                alt_parts = [baseline, "", tempo_note, "", *coaching_tips]
+                alt = "\n".join(alt_parts).strip()
+                if alt != primary:
+                    candidates.append(alt)
+            elif coaching_tips:
+                alt = f"{coaching_tips[0]}\n\n{baseline}".strip()
+                if alt != primary:
+                    candidates.append(alt)
+            if len(candidates) > 1:
+                fact_ids = ", ".join(state.get("last_fact_ids") or []) or "verified"
+                think_hdr = (
+                    f"<think>\nIntent & Topic: {intent or 'general'}.\n"
+                    f"Mem0 Constraints: {'; '.join(mem_texts) or 'None'}.\n"
+                    f"Expert KB Rules: Ground strictly in [{fact_ids}] with warm storyteller prose.\n</think>\n"
+                )
+                scores = self.llm.score_candidates_with_lora(
+                    system_prompt=state.get("system_prompt") or "You are Danbi, a Korean janggu tutor.",
+                    mem0_context=mem_texts,
+                    user_query=state.get("resolved_query") or state.get("raw_query", ""),
+                    candidates=[think_hdr + c for c in candidates],
+                )
+                if scores and len(scores) == len(candidates):
+                    best_idx = max(range(len(scores)), key=lambda i: scores[i])
+                    return candidates[best_idx]
+
+        return primary
 
     def _llm_synthesize(
         self,
         state: JangBotState,
         tempo_note: str,
         session: Optional[SessionMemory] = None,
-    ) -> Optional[str]:
+    ) -> Tuple[Optional[str], str]:
         """Use the configured LLM for fresh, non-repeating prose strictly grounded in verified facts."""
         facts_block = "\n".join(
             f"- [{f['id']}] ({f['category']}): {f['statement']}" for f in (state.get("retrieved_facts") or [])
@@ -1563,22 +1673,30 @@ class JangBotNodes:
                 temperature=min(synth_temp + 0.15, 0.9),
             )
             if retry and not is_repetitive(retry, all_recent):
-                return retry
-        return reply
+                return retry, system_prompt
+        return reply, system_prompt
 
     # ------------------------------------------------------------ Node 6: Update Memory & Log
 
     def update_memory(self, state: JangBotState) -> Dict[str, Any]:
-        """Persist new Mem0 user facts, record messages into checkpoint and log query."""
+        """Persist new Mem0 user facts, record messages into checkpoint and log structured trajectory."""
         raw_query = state.get("raw_query", "")
         reply = state.get("reply", "")
         intent = state.get("intent")
         confidence = float(state.get("confidence") or 0.0)
         response_status = state.get("response_status", "answered")
         user_id = state.get("user_id") or "default_user"
+        session_id = state.get("session_id", "default")
 
         if response_status in {"answered", "clarification", "fallback", "off_topic"}:
             self.repository.log_query(raw_query, intent, confidence, response_status)
+
+        # Update previous turn's feedback_score non-blockingly if this turn corrects or confirms it
+        prev_tid = state.get("last_trajectory_id")
+        if prev_tid and raw_query:
+            fb_score = detect_feedback_signal(raw_query)
+            if fb_score is not None:
+                self.trajectory_logger.record_feedback(prev_tid, fb_score, correction_text=raw_query)
 
         # Persist user facts across sessions via Mem0 / local fallback (skip pure off-topic noise unless it includes user intro)
         if raw_query:
@@ -1588,11 +1706,32 @@ class JangBotNodes:
                     {"role": "assistant", "content": reply},
                 ],
                 user_id=user_id,
-                metadata={"session_id": state.get("session_id", "default"), "intent": intent or "unknown"},
+                metadata={"session_id": session_id, "intent": intent or "unknown"},
             )
+
+        mem0_ctx = [
+            m.get("memory", "")
+            for m in (state.get("user_memories") or [])
+            if m.get("memory")
+        ]
+        tid = self.trajectory_logger.log_turn(
+            session_id=session_id,
+            user_id=user_id,
+            turn=int(state.get("conversation_turn") or 1),
+            system_prompt=state.get("system_prompt") or "",
+            mem0_retrieved_context=mem0_ctx,
+            user_query=raw_query,
+            assistant_response=reply,
+            tool_calls=list(state.get("tool_calls") or []),
+            resolved_query=state.get("resolved_query") or raw_query,
+            intent=intent,
+            response_status=response_status,
+            fact_ids=list(state.get("last_fact_ids") or []) if response_status == "answered" else [],
+        )
 
         return {
             "messages": [AIMessage(content=reply)],
             "used_variants": dict(state.get("used_variants") or {}),
             "recent_replies": list(state.get("recent_replies") or []),
+            "last_trajectory_id": tid,
         }

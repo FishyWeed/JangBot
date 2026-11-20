@@ -8,16 +8,25 @@
 		SemanticPathResult
 	} from '../types';
 
+	export interface TopicItem {
+		id: string;
+		title: string;
+		ko: string;
+		prompt: string;
+	}
+
 	interface Props {
 		open?: boolean;
 		busy?: boolean;
+		topics: TopicItem[];
 		onask: (prompt: string) => void;
 		onclose: () => void;
 	}
 
-	let { open = false, busy = false, onask, onclose }: Props = $props();
+	let { open = false, busy = false, topics, onask, onclose }: Props = $props();
 
 	let tab = $state<'explore' | 'path'>('explore');
+	let showAllTopics = $state(false);
 	let loading = $state(false);
 	let errorMsg = $state<string | null>(null);
 	let graph = $state<SemanticGraphOverview | null>(null);
@@ -31,6 +40,12 @@
 	let toConcept = $state('paulownia_coreana');
 	let pathLoading = $state(false);
 	let pathResult = $state<SemanticPathResult | null>(null);
+
+	const QUICK_TOPIC_COUNT = 4;
+
+	let visibleTopics = $derived<TopicItem[]>(
+		showAllTopics ? topics : topics.slice(0, QUICK_TOPIC_COUNT)
+	);
 
 	const TYPE_LABELS: Record<string, string> = {
 		all: 'All',
@@ -171,57 +186,96 @@
 <aside
 	class="jb jb-map-panel"
 	class:is-open={open}
-	aria-label="Semantic Concept Map"
+	aria-label="Topics and Concept Map"
 	aria-hidden={!open}
 >
 	<div class="jb-map-head">
 		<div class="jb-map-heading">
 			<span class="jb-map-icon" aria-hidden="true"><Icon name="network" size={16} /></span>
 			<div>
-				<h2 class="jb-map-title">Concept Map</h2>
+				<h2 class="jb-map-title">Topics &amp; Concept Map</h2>
 				<span class="jb-map-sub">
 					{#if graph}
 						{graph.stats.total_nodes} verified concepts · {graph.stats.total_edges} cited links
 					{:else}
-						Local verified semantic network
+						Quick topics &amp; verified semantic network
 					{/if}
 				</span>
 			</div>
 		</div>
-		<IconButton icon="x" label="Close concept map" onclick={onclose} />
+		<IconButton icon="x" label="Close topics and concept map" onclick={onclose} />
 	</div>
-
-	<div class="jb-map-tabs" role="tablist">
-		<button
-			type="button"
-			role="tab"
-			class="jb-map-tab"
-			class:is-active={tab === 'explore'}
-			aria-selected={tab === 'explore'}
-			onclick={() => (tab = 'explore')}
-		>
-			Explore Graph
-		</button>
-		<button
-			type="button"
-			role="tab"
-			class="jb-map-tab"
-			class:is-active={tab === 'path'}
-			aria-selected={tab === 'path'}
-			onclick={() => {
-				tab = 'path';
-				if (!pathResult && graph) runPathFinder();
-			}}
-		>
-			Multi-Hop Path Finder
-		</button>
-	</div>
-
-	{#if errorMsg}
-		<div class="jb-map-error">{errorMsg}</div>
-	{/if}
 
 	<div class="jb-map-body">
+		{#if topics.length > 0}
+			<section class="jb-quick-topics" aria-label="Quick starter topics">
+				<div class="jb-quick-topics__head">
+					<div class="jb-quick-topics__label">
+						<Icon name="sparkles" size={13} />
+						<span>Quick Topics</span>
+						<span class="jb-quick-topics__ko" lang="ko">단비에게 물어보세요</span>
+					</div>
+					{#if topics.length > QUICK_TOPIC_COUNT}
+						<button
+							type="button"
+							class="jb-quick-toggle"
+							onclick={() => (showAllTopics = !showAllTopics)}
+						>
+							{showAllTopics ? 'Show fewer' : `All ${topics.length}`}
+						</button>
+					{/if}
+				</div>
+				<div class="jb-quick-grid">
+					{#each visibleTopics as topic (topic.id)}
+						<button
+							type="button"
+							class="jb-quick-card"
+							disabled={busy}
+							onclick={() => onask(topic.prompt)}
+						>
+							<span class="jb-quick-card__top">
+								<span class="jb-quick-card__title">{topic.title}</span>
+								<span class="jb-quick-card__arrow" aria-hidden="true">
+									<Icon name="arrowRight" size={13} />
+								</span>
+							</span>
+							<span class="jb-quick-card__ko" lang="ko">{topic.ko}</span>
+						</button>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
+		<div class="jb-map-tabs" role="tablist">
+			<button
+				type="button"
+				role="tab"
+				class="jb-map-tab"
+				class:is-active={tab === 'explore'}
+				aria-selected={tab === 'explore'}
+				onclick={() => (tab = 'explore')}
+			>
+				Concept Map
+			</button>
+			<button
+				type="button"
+				role="tab"
+				class="jb-map-tab"
+				class:is-active={tab === 'path'}
+				aria-selected={tab === 'path'}
+				onclick={() => {
+					tab = 'path';
+					if (!pathResult && graph) runPathFinder();
+				}}
+			>
+				Multi-Hop Path Finder
+			</button>
+		</div>
+
+		{#if errorMsg}
+			<div class="jb-map-error">{errorMsg}</div>
+		{/if}
+
 		{#if loading}
 			<p class="jb-map-empty">Loading verified semantic network…</p>
 		{:else if tab === 'explore'}
@@ -474,7 +528,7 @@
 		top: var(--header-height);
 		right: 0;
 		bottom: 0;
-		width: min(460px, 94vw);
+		width: min(468px, 94vw);
 		z-index: 45;
 		display: flex;
 		flex-direction: column;
@@ -534,13 +588,112 @@
 		margin-top: 2px;
 	}
 
+	.jb-quick-topics {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding-bottom: 10px;
+		border-bottom: 1px solid var(--border-subtle);
+	}
+
+	.jb-quick-topics__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	.jb-quick-topics__label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 11.5px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--accent);
+	}
+
+	.jb-quick-topics__ko {
+		font-weight: 400;
+		text-transform: none;
+		letter-spacing: 0;
+		color: var(--text-secondary);
+	}
+
+	.jb-quick-toggle {
+		border: none;
+		background: transparent;
+		color: var(--accent);
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		padding: 2px 4px;
+	}
+
+	.jb-quick-toggle:hover {
+		text-decoration: underline;
+	}
+
+	.jb-quick-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 7px;
+	}
+
+	.jb-quick-card {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 8px 10px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-default);
+		background: var(--bg-elevated);
+		color: var(--text-primary);
+		text-align: left;
+		cursor: pointer;
+		transition: border-color 0.15s ease, background-color 0.15s ease;
+	}
+
+	.jb-quick-card:hover:not(:disabled) {
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--accent-soft) 45%, var(--bg-elevated));
+	}
+
+	.jb-quick-card:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.jb-quick-card__top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+	}
+
+	.jb-quick-card__title {
+		font-size: 12.5px;
+		font-weight: 600;
+		line-height: 1.25;
+		color: var(--text-primary);
+	}
+
+	.jb-quick-card__arrow {
+		color: var(--accent);
+		flex: none;
+	}
+
+	.jb-quick-card__ko {
+		font-size: 11px;
+		color: var(--text-secondary);
+	}
+
 	.jb-map-tabs {
 		flex: none;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 6px;
-		padding: var(--space-2) var(--space-3);
-		border-bottom: 1px solid var(--border-subtle);
 	}
 
 	.jb-map-tab {
@@ -838,7 +991,6 @@
 	}
 
 	.jb-map-error {
-		margin: 8px 12px 0;
 		padding: 8px 10px;
 		border-radius: var(--radius-sm);
 		background: color-mix(in srgb, #c0392b 16%, transparent);

@@ -1,9 +1,12 @@
-"""Optional LLM client wrapper supporting OpenAI, Gemini, Ollama and offline fallback."""
+"""Optional LLM client wrapper supporting local PyTorch LoRA adapters, API endpoints and offline fallback."""
 
 import os
 import time
-from typing import Optional, Tuple
+from pathlib import Path
+from typing import List, Optional, Sequence, Tuple
 from src.settings import config
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 _GEMINI_FALLBACK_MODELS: Tuple[str, ...] = (
@@ -14,10 +17,11 @@ _KNOWN_UNSUPPORTED_GEMINI_ALIASES = {"gemini-3.8-flash", "gemini-2.5-flash", "ge
 
 
 class HybridLLMClient:
-    """Thin LLM wrapper that activates when an API key or Ollama endpoint is configured."""
+    """Thin LLM wrapper supporting hot-swappable local PyTorch LoRA adapters and optional endpoints."""
 
     def __init__(self) -> None:
         agent_cfg = config.get("agent", {})
+        train_cfg = config.get("training", {})
         self.enabled: bool = bool(agent_cfg.get("use_llm_when_available", True))
         self.provider: str = os.getenv("LLM_PROVIDER", agent_cfg.get("llm_provider", "openai")).lower()
         self.model: str = os.getenv("LLM_MODEL", agent_cfg.get("llm_model", "gpt-4o-mini"))
@@ -25,7 +29,64 @@ class HybridLLMClient:
             self.model = _GEMINI_FALLBACK_MODELS[0]
         self.temperature: float = float(agent_cfg.get("temperature", 0.3))
         self._cooldown_until: float = 0.0
-        self._client = self._build_client()
+        self._local_lora = None
+        self.lora_adapter_path: Optional[Path] = None
+
+        use_local_lora = (
+            os.getenv("DANBI_USE_LOCAL_LORA", "").lower() in {"1", "true", "yes"}
+            or bool(train_cfg.get("use_local_lora_adapter", False))
+            or self.provider == "local_lora"
+        )
+        configured_adapter = os.getenv("DANBI_LORA_ADAPTER_PATH", train_cfg.get("lora_adapter_path", "")).strip()
+        if use_local_lora and configured_adapter:
+            adapter_dir = Path(configured_adapter)
+            if not adapter_dir.is_absolute():
+                adapter_dir = BASE_DIR / adapter_dir
+            if (adapter_dir / "adapter.pt").exists() and (adapter_dir / "tokenizer.json").exists():
+                self.load_lora_adapter(adapter_dir)
+
+        self._client = None if self.provider == "local_lora" else self._build_client()
+
+    def load_lora_adapter(self, adapter_dir: Path) -> bool:
+        """Load or hot-swap a locally trained PyTorch LoRA adapter without Ollama or HuggingFace."""
+        target = Path(adapter_dir)
+        if not target.is_absolute():
+            target = BASE_DIR / target
+        if not (target / "adapter.pt").exists():
+            return False
+        from src.training.local_lora import LocalLoRARuntime
+
+        if self._local_lora is not None and (target / "adapter.pt").exists():
+            try:
+                self._local_lora.hotswap_adapter(target)
+                self.lora_adapter_path = target
+                return True
+            except Exception:
+                pass
+        self._local_lora = LocalLoRARuntime(target)
+        self.lora_adapter_path = target
+        return True
+
+    def hotswap_lora_adapter(self, adapter_dir: Path) -> bool:
+        """Alias for hot-swapping an updated LoRA adapter checkpoint at runtime."""
+        return self.load_lora_adapter(adapter_dir)
+
+    @property
+    def has_local_lora(self) -> bool:
+        """True when a local GRPO/SFT LoRA adapter is loaded in memory."""
+        return self._local_lora is not None
+
+    def score_candidates_with_lora(
+        self,
+        system_prompt: str,
+        mem0_context: Sequence[str],
+        user_query: str,
+        candidates: Sequence[str],
+    ) -> Optional[List[float]]:
+        """Score local candidate responses via the loaded LoRA adapter policy."""
+        if self._local_lora is None or not candidates:
+            return None
+        return self._local_lora.score_candidates(system_prompt, mem0_context, user_query, candidates)
 
     @property
     def effective_model(self) -> str:
@@ -88,8 +149,8 @@ class HybridLLMClient:
 
     @property
     def is_available(self) -> bool:
-        """Whether an active LLM backend is ready for inference."""
-        return self._client is not None
+        """Whether an external/local completion endpoint (not just LoRA reranker) is active."""
+        return self._client is not None or (self.provider == "local_lora" and self._local_lora is not None)
 
     @property
     def in_cooldown(self) -> bool:
@@ -103,16 +164,29 @@ class HybridLLMClient:
         max_tokens: int = 350,
         temperature: Optional[float] = None,
     ) -> Optional[str]:
-        """Generate text from the configured LLM with fast 404 failover and timeout backoff."""
+        """Generate text from the configured local LoRA policy or endpoint, stripping `<think>` tags."""
+        temp = self.temperature if temperature is None else temperature
+
+        if self.provider == "local_lora" and self._local_lora is not None:
+            _think, final_ans = self._local_lora.generate_response(
+                system_prompt=system_prompt,
+                mem0_context=[],
+                user_query=user_prompt,
+                max_new_tokens=min(max_tokens, 160),
+                temperature=temp,
+            )
+            return final_ans or None
+
         if self._client is None or self.in_cooldown:
             return None
 
-        temp = self.temperature if temperature is None else temperature
         candidates = [self.model]
         if self.provider == "gemini":
             for fb in _GEMINI_FALLBACK_MODELS:
                 if fb not in candidates:
                     candidates.append(fb)
+
+        from src.training.local_lora import strip_think_tags
 
         for candidate in candidates:
             try:
@@ -128,7 +202,8 @@ class HybridLLMClient:
                 content = resp.choices[0].message.content
                 if content and content.strip():
                     self.model = candidate
-                    return content.strip()
+                    _think, clean_answer = strip_think_tags(content.strip())
+                    return clean_answer or content.strip()
             except Exception as exc:
                 err_name = type(exc).__name__.lower()
                 err_str = str(exc).lower()

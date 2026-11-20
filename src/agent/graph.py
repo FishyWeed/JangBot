@@ -128,7 +128,9 @@ class JangBotGraphAgent:
         return dict(snapshot.values) if snapshot and snapshot.values else {}
 
     def close(self) -> None:
-        """Close underlying SQLite checkpointer connection cleanly."""
+        """Flush trajectory queue and close underlying SQLite checkpointer connection cleanly."""
+        if getattr(self, "nodes", None) is not None and getattr(self.nodes, "trajectory_logger", None) is not None:
+            self.nodes.trajectory_logger.flush(timeout=3.0)
         if getattr(self, "_conn", None) is not None:
             self._conn.close()
             self._conn = None

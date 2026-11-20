@@ -42,7 +42,10 @@ class JangBotState(TypedDict, total=False):
     user_memories: List[Dict[str, Any]]
     retrieved_facts: List[Dict[str, Any]]
     citations: List[Dict[str, Any]]
+    tool_calls: List[Dict[str, Any]]
+    system_prompt: str
     baseline_reply: str
 
-    # Final synthesized response
+    # Final synthesized response & trajectory link
     reply: str
+    last_trajectory_id: Optional[str]

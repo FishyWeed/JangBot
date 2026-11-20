@@ -2,8 +2,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '../../lib/api';
 	import DanbiStage from '../../lib/components/DanbiStage.svelte';
-	import ConceptMapDrawer from '../../lib/components/ConceptMapDrawer.svelte';
-	import TopicsDrawer, { type TopicItem } from '../../lib/components/TopicsDrawer.svelte';
+	import ConceptMapDrawer, { type TopicItem } from '../../lib/components/ConceptMapDrawer.svelte';
 	import {
 		AppShell,
 		Sidebar,
@@ -134,15 +133,13 @@
 	);
 
 	// Drawers & confirm UI state
-	let topicsOpen = $state(false);
-	let graphOpen = $state(false);
+	let exploreOpen = $state(false);
 	let memoriesOpen = $state(false);
 	let resetConfirmOpen = $state(false);
 	let profileMemories = $state<Array<Record<string, unknown>>>([]);
 
 	function handlePickTopic(prompt: string) {
-		topicsOpen = false;
-		graphOpen = false;
+		exploreOpen = false;
 		sendMessage(prompt);
 	}
 
@@ -334,7 +331,7 @@
 	onkeydown={(e) => {
 		if (e.key === 'Escape') {
 			if (resetConfirmOpen) resetConfirmOpen = false;
-			else if (topicsOpen) topicsOpen = false;
+			else if (exploreOpen) exploreOpen = false;
 		}
 	}}
 />
@@ -358,21 +355,12 @@
 		title={activeProfile?.title ?? 'JangBot Chat'}
 		thinking={isSending}
 		mascotState={speakingId ? 'speaking' : undefined}
-		{topicsOpen}
-		{graphOpen}
+		{exploreOpen}
 		memoryOpen={memoriesOpen}
 		canReset={!!activeProfile && !isSending && (activeProfile.messages.length > 0)}
-		ontoggletopics={() => {
-			topicsOpen = !topicsOpen;
-			if (topicsOpen) {
-				graphOpen = false;
-				memoriesOpen = false;
-			}
-		}}
-		ontogglegraph={() => {
-			graphOpen = !graphOpen;
-			if (graphOpen) {
-				topicsOpen = false;
+		ontoggleexplore={() => {
+			exploreOpen = !exploreOpen;
+			if (exploreOpen) {
 				memoriesOpen = false;
 			}
 		}}
@@ -419,19 +407,12 @@
 	messageCount={feedMessages.length}
 />
 
-<TopicsDrawer
-	open={topicsOpen}
+<ConceptMapDrawer
+	open={exploreOpen}
 	busy={isLoading || isSending || !activeProfile}
 	topics={TOPIC_ITEMS}
-	onpick={handlePickTopic}
-	onclose={() => (topicsOpen = false)}
-/>
-
-<ConceptMapDrawer
-	open={graphOpen}
-	busy={isLoading || isSending || !activeProfile}
 	onask={handlePickTopic}
-	onclose={() => (graphOpen = false)}
+	onclose={() => (exploreOpen = false)}
 />
 
 {#if memoriesOpen}
