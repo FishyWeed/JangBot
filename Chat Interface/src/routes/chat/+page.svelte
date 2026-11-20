@@ -33,7 +33,7 @@
 			id: 'origins',
 			title: 'Origins & Silk Road',
 			ko: '기원',
-			prompt: 'Where did the janggu originate and how did it arrive in Korea?'
+			prompt: 'Where did the janggu originate?'
 		},
 		{
 			id: 'history',
@@ -48,10 +48,16 @@
 			prompt: 'What materials are used to build the janggu body and drumheads?'
 		},
 		{
-			id: 'sticks',
-			title: 'The Two Sticks',
-			ko: '궁채와 열채',
-			prompt: 'How do the gungchae and yeolchae sticks differ?'
+			id: 'tuning',
+			title: 'Tuning Cords & Wedges',
+			ko: '조임줄과 조이개',
+			prompt: 'How is the janggu tuned with joimjul cords and joigae wedges?'
+		},
+		{
+			id: 'acoustics',
+			title: 'Hourglass Acoustics',
+			ko: '음향 원리',
+			prompt: 'How do the acoustics of the janggu hourglass waist work?'
 		},
 		{
 			id: 'strokes',
@@ -63,25 +69,19 @@
 			id: 'jangdan',
 			title: 'Jangdan Rhythmic Cycles',
 			ko: '장단',
-			prompt: 'What are the main traditional jangdan rhythmic cycles?'
+			prompt: 'Explain the traditional jangdan rhythm cycles of the janggu.'
 		},
 		{
 			id: 'court-folk',
-			title: 'Court vs. Folk Music',
+			title: 'Court vs. Folk Technique',
 			ko: '정악과 민속악',
 			prompt: 'How does playing the janggu differ between royal court music and folk festivals?'
-		},
-		{
-			id: 'acoustics',
-			title: 'Tuning & Acoustics',
-			ko: '조율과 음향',
-			prompt: 'How do the joimjul cords and joigae wedges tune the janggu acoustics?'
 		},
 		{
 			id: 'notation',
 			title: 'Jeongganbo Notation',
 			ko: '정간보',
-			prompt: 'How is the janggu written in King Sejong Jeongganbo notation?'
+			prompt: 'Explain Jeongganbo notation for the janggu.'
 		},
 		{
 			id: 'chuimsae',
@@ -91,9 +91,9 @@
 		},
 		{
 			id: 'samulnori',
-			title: 'Samulnori & Modern Stage',
+			title: 'Samulnori Tradition',
 			ko: '사물놀이',
-			prompt: 'How did Samulnori bring the janggu to modern stages worldwide?'
+			prompt: 'Tell me about Samulnori and the janggu.'
 		},
 		{
 			id: 'beginner',
